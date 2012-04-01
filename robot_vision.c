@@ -177,7 +177,7 @@ float get_intersect_slope(int x1, int x2, int y1, int y2){
 	return ((y1 - y2)/((float) x1 - (float) x2));
 }
 
-void draw_intersect_line(squares_t *square_1, squares_t *square_2, squares_t *sec_squares_1, squares_t *sec_squares2,
+int draw_intersect_line(squares_t *square_1, squares_t *square_2, squares_t *sec_squares_1, squares_t *sec_squares_2,
 			 IplImage *image, int R, int G, int B) {
 	CvPoint start, end;
 	int x_int;
@@ -186,10 +186,10 @@ void draw_intersect_line(squares_t *square_1, squares_t *square_2, squares_t *se
 	//square 1 on the left side
 	if (square_1->center.x < image->width/2){
 		//get square_1 slope
-		if (square_1->next->center.x < image->width/2)
-			slope1 = get_intersect_slope( square_1->center.x, square_1->next->center.x, square_1->center.y, square_1->next->center.y);
+		if (sec_squares_1->center.x < image->width/2)
+			slope1 = get_intersect_slope( square_1->center.x, sec_squares_1->center.x, square_1->center.y, sec_squares_1->center.y);
 		else 
-			slope1 = get_intersect_slope( square_1->center.x, square_2->next->center.x, square_1->center.y, square_2->next->center.y);
+			slope1 = get_intersect_slope( square_1->center.x, sec_squares_2->center.x, square_1->center.y, sec_squares_2->center.y);
 		//printf("square1 area = %d square2 area = %d slope = %f\n", square_1->area, temp->area, slope);
 		start.x = square_1->center.x;
 		start.y = square_1->center.y;
@@ -200,10 +200,10 @@ void draw_intersect_line(squares_t *square_1, squares_t *square_2, squares_t *se
 	//square 1 on the right side
 	else{
 		//get square_1 slope
-		if (square_1->next->center.x > image->width/2)
-			slope1 = get_intersect_slope( square_1->center.x, square_1->next->center.x, square_1->center.y, square_1->next->center.y);
+		if (sec_squares_1->center.x > image->width/2)
+			slope1 = get_intersect_slope( square_1->center.x, sec_squares_1->center.x, square_1->center.y, sec_squares_1->center.y);
 		else 
-			slope1 = get_intersect_slope( square_1->center.x, square_2->next->center.x, square_1->center.y, square_2->next->center.y);
+			slope1 = get_intersect_slope( square_1->center.x, sec_squares_2->center.x, square_1->center.y, sec_squares_2->center.y);
 		start.x = square_1->center.x;
 		start.y = square_1->center.y;
 		end.x = square_1->center.x - multiplier;
@@ -214,10 +214,10 @@ void draw_intersect_line(squares_t *square_1, squares_t *square_2, squares_t *se
 	//square 2 on the left side
 	if (square_2->center.x < image->width/2){
 		//get square_2 slope
-		if (square_1->next->center.x < image->width/2)
-			slope2 = get_intersect_slope( square_2->center.x, square_1->next->center.x, square_2->center.y, square_1->next->center.y);
+		if (sec_squares_1->center.x < image->width/2)
+			slope2 = get_intersect_slope( square_2->center.x, sec_squares_1->center.x, square_2->center.y, sec_squares_1->center.y);
 		else 
-			slope2 = get_intersect_slope( square_2->center.x, square_2->next->center.x, square_2->center.y, square_2->next->center.y);
+			slope2 = get_intersect_slope( square_2->center.x, sec_squares_2->center.x, square_2->center.y, sec_squares_2->center.y);
 		start.x = square_2->center.x;
 		start.y = square_2->center.y;
 		end.x = square_2->center.x + multiplier;
@@ -226,10 +226,10 @@ void draw_intersect_line(squares_t *square_1, squares_t *square_2, squares_t *se
 	//square 2 on the right side
 	else{
 		//get square_2 slope
-		if (square_1->next->center.x > image->width/2)
-			slope2 = get_intersect_slope( square_2->center.x, square_1->next->center.x, square_2->center.y, square_1->next->center.y);
+		if (sec_squares_1->center.x > image->width/2)
+			slope2 = get_intersect_slope( square_2->center.x, sec_squares_1->center.x, square_2->center.y, sec_squares_1->center.y);
 		else 
-			slope2 = get_intersect_slope( square_2->center.x, square_2->next->center.x, square_2->center.y, square_2->next->center.y);
+			slope2 = get_intersect_slope( square_2->center.x, sec_squares_2->center.x, square_2->center.y, sec_squares_2->center.y);
 		start.x = square_2->center.x;
 		start.y = square_2->center.y;
 		end.x = square_2->center.x - multiplier;
@@ -329,12 +329,7 @@ int main(int argv, char **argc) {
 	robot_if_t ri;
 	int 	x_dist_diff, 
 		square_count = 0, 
-		prev_square_area_1 = 0,
-		prev_square_area_2 = 0,
-		prev_square_area_3 = 0,
-		prev_square_area_4 = 0,
 		current_phase = 0, 
-		hasPair = 0,
 		intersect_x = 0,
 		avg_pair_area;
 	IplImage *image = NULL, 
@@ -486,12 +481,13 @@ int main(int argv, char **argc) {
 				printf("weight average area = %d\n", avg_pair_area);
 				
 				// if two pairs are found, draw the intersect line between them
-				if (s = hasTwoPair){
+				if (s == hasTwoPair){
 					printf("2 Pairs found.\n");
 					draw_X(sec_pair_square_1, image, 0, 0, 255);
 					draw_X(sec_pair_square_2, image, 0, 0, 255);
-					draw_intersect_line(pair_square_1, pair_square_2, sec_pair_square_1,
+					intersect_x = draw_intersect_line(pair_square_1, pair_square_2, sec_pair_square_1,
 							    sec_pair_square_2, image, 0, 160, 255);
+					printf("end\n");
 					
 				}
 			}
