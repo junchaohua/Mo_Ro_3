@@ -3,7 +3,7 @@
  * 
  * 05-16: I added the cvOr() function to compute the new threshold, it definitely has improved our thresholded image.
  * 	 But the thresholded image still needs some work. I tried various combinations of HSV values but it didn't help that much.
- * 	 Also, I added a function (get_square_diffence()) to calculate the difference in distance between the biggest two squares 
+ * 	 Also, I added a function (get_diff_in_x()) to calculate the difference in distance between the biggest two squares 
  * 	and the center vertical line. 
  * 
  * A side note: I found that the resolution/quality of the cameras varies with different robots. Please use "Optimus"
@@ -16,7 +16,7 @@
  * (Lines 267- 305 are the movement stuff)
  * 
  * 03/30: 
- * 	if (hasTwoPairs) use drift
+ * 	if (hasTwoPair) use drift
  * 	if (hasOnePair) use rotate
  * 	if (two largest squares) use rotate 
  */
@@ -29,6 +29,16 @@
 
 #define area_threshold 0.75
 #define multiplier 500
+
+typedef enum _square_state_ {
+	hasTwoPair,
+	hasOnePair,
+	twoLargest,
+	onlyLargest,
+	noneFound
+} square_state;
+
+/* Sort the list of squares from Largest to Smallest by Area */
 void sort_squares(squares_t *squares) {
 	squares_t *sq_idx, 
 	          *counter;
@@ -65,8 +75,8 @@ void sort_squares(squares_t *squares) {
 	}  
 }
 
-//compute the difference in distance between the biggest two squares and the center vertical line
-int get_square_diffence(squares_t *square1, squares_t *square2, IplImage *img){
+/* Compute the difference in distance between the biggest two squares and the center vertical line */
+int get_diff_in_x(squares_t *square1, squares_t *square2, IplImage *img){
 	CvPoint pt1, pt2;
 	int dist_to_center1, dist_to_center2, diff;
 	
@@ -85,7 +95,31 @@ int get_square_diffence(squares_t *square1, squares_t *square2, IplImage *img){
 	return diff;
 }
 
-//checks if the same square gets marked twice
+/* Check the differnce in y between two squares */
+int get_diff_in_y(squares_t *square1, squares_t *square2){
+	int y_1, y_2, diff;
+	
+	y_1 = square1->center.y;
+	y_2 = square2->center.y;
+	
+	diff = abs(y_1 - y_2);
+	//printf("square_1 y = %d\t square_2 y = %d\tdifference in y = %d\n", y_1, y_2, diff);
+	return diff;
+}
+
+/* Get the ratio of area between two squares as Smaller Area / Larger Area */
+float getRatio(int x, int y) {  // x>y
+	float r;
+	
+	if( x < y ) 	r = (float) x / (float) y;
+	else if(x > y)	r = (float) y / (float) x;
+	else 		r = 1.0;
+		
+	//printf("Area ratio = %f\n", r);
+	return r;
+}
+
+/* checks if the same square gets marked twice */
 bool is_same_square(squares_t *square1, squares_t *square2){
 	CvPoint pt1, pt2;
 	int x_diff, y_diff;
@@ -100,29 +134,7 @@ bool is_same_square(squares_t *square1, squares_t *square2){
 	return false;
 }
 
-/* Check the differnce in y between two squares */
-int get_diff_in_y(squares_t *square1, squares_t *square2){
-	int y_1, y_2, diff;
-	
-	y_1 = square1->center.y;
-	y_2 = square2->center.y;
-	
-	diff = abs(y_1 - y_2);
-	//printf("square_1 y = %d\t square_2 y = %d\tdifference in y = %d\n", y_1, y_2, diff);
-	return diff;
-}
-
-float getRatio(int x, int y) {  // x>y
-	float r;
-	
-	if( x < y ) 	r = (float) x / (float) y;
-	else if(x > y)	r = (float) y / (float) x;
-	else 		r = 1.0;
-		
-	//printf("Area ratio = %f\n", r);
-	return r;
-}
-
+/* Checks two squares to see if they are a pair based on the ratio between their areas */
 int isPair(squares_t *square1, squares_t *square2, float area_ratio_threshold){//set thresh around .75
 	//compare areas
 	float ratio;
@@ -141,6 +153,7 @@ int isPair(squares_t *square1, squares_t *square2, float area_ratio_threshold){/
 	else									return 0;
 }
 
+/* Draws an X of the square s, using the RGB values passed in as parameters */
 void draw_X(squares_t *s, IplImage *img, int R, int G, int B) {
 	CvPoint pt1, pt2;
 	int sq_amt = (int) (sqrt(s->area) / 2);	
@@ -160,7 +173,8 @@ void draw_X(squares_t *s, IplImage *img, int R, int G, int B) {
 	cvLine(img, pt1, pt2, CV_RGB(R, G, B), 3, CV_AA, 0);
 }
 
-void draw_intersect_line(squares_t *square_1, squares_t *square_2, IplImage *image, int R, int G, int B) {
+void draw_intersect_line(squares_t *square_1, squares_t *square_2, squares_t *sec_squares_1, squares_t *sec_squares2,
+			 IplImage *image, int R, int G, int B) {
 	CvPoint start, end;
 	squares_t *temp;
 	//int sq_amt = (int) (sqrt(square->area) / 2);	
@@ -242,14 +256,14 @@ void printAreas(squares_t *squares) {
 }
 
 //try to center the robot
-void center_robot(squares_t *square_1, squares_t * square_2, int option, IplImage *image){
+void center_robot(squares_t *square_1, squares_t *square_2, square_state option, IplImage *image){
 	int x_dist_diff;
 	//while (1){
 		switch (option){
 			//a pair squares
-			case 0:
+			case hasTwoPair:
 			{
-				x_dist_diff = get_square_diffence(square_1, square_2, image);
+				x_dist_diff = get_diff_in_x(square_1, square_2, image);
 				//rotate to the left
 				if (x_dist_diff < -40){
 					printf("Has pair.  Diff < - 40.  rotate left at speed = 6\n");
@@ -269,19 +283,19 @@ void center_robot(squares_t *square_1, squares_t * square_2, int option, IplImag
 			}
 			
 			//two largest square
-			case 1:
+			case hasOnePair:
 			{
 				break;
 			}
 			
 			//one largest square
-			case 2:
+			case twoLargest:
 			{
 				break;
 			}
 				
 			//no squares
-			case 3:
+			case onlyLargest:
 			{
 				break;
 			}
@@ -303,8 +317,7 @@ int main(int argv, char **argc) {
 		prev_square_area_2 = 0,
 		prev_square_area_3 = 0,
 		prev_square_area_4 = 0,
-		current_phase = 0, 
-		hasPair = 0;
+		current_phase = 0;		
 	IplImage *image = NULL, 
 		*hsv = NULL, 
 		*threshold_1 = NULL, 
@@ -314,10 +327,11 @@ int main(int argv, char **argc) {
 		*largest,
 		*next_largest,
 		*pair_square_1, 
-		*pair_square_2, 
+		*pair_square_2,
+		*sec_pair_square_1,
+		*sec_pair_square_2,
 		*sq_idx;
-	bool 	onlyLargest = 0,
-		twoLargest = 0;
+	square_state s;
 	
 	
 	// Make sure we have a valid command line argument
@@ -412,54 +426,60 @@ int main(int argv, char **argc) {
 			//find largest useful pair (if they exist)
 			sq_idx = squares;
 			
+			// Search for pairs
 			while(sq_idx != NULL){
 				if(sq_idx->next == NULL) break;
+				
 				else if(isPair(sq_idx, sq_idx->next, area_threshold)){
-					if (hasPair == 0 ){
+					if (s == noneFound ){
 						
 						pair_square_1 = sq_idx;
 						pair_square_2 = sq_idx->next;
-						hasPair++;
-						
+												
+						s = hasOnePair;
 						//sq_idx = sq_idx->next;
 					}
 					//make sure the same square doesn't appear twice
-					else if (hasPair == 1 && !is_same_square(pair_square_1, sq_idx) && 
-						!is_same_square(pair_square_1, sq_idx->next) && !is_same_square(pair_square_2, sq_idx) &&
+					else if (s == hasOnePair && !is_same_square(pair_square_1, sq_idx) && 
+						!is_same_square(pair_square_1, sq_idx->next) && 
+						!is_same_square(pair_square_2, sq_idx) &&
 						!is_same_square(pair_square_2, sq_idx->next)){
 						
-						pair_square_1->next = sq_idx;
-						pair_square_2->next = sq_idx->next;
-						hasPair++;
+						sec_pair_square_1 = sq_idx;
+						sec_pair_square_2 = sq_idx->next;
+						s = hasTwoPair;
 						
 						//sq_idx = sq_idx->next;
+					
+						break;
 					}
 					
-					
-					if (hasPair == 2)
-						break;
 				}
 				sq_idx = sq_idx->next;
 			}
 		
 			/* if pair is found, mark them for later use */	
-			if(hasPair == 1 || hasPair == 2){
+			if(s == hasOnePair || s == hasTwoPair){
 				draw_X(pair_square_1, image, 0, 255, 0);
 				draw_X(pair_square_2, image, 0, 255, 0);
 				
 				// if two pairs are found, draw the intersect line between them
-				if (hasPair == 2){
+				if (s = hasTwoPair){
 					printf("2 Pairs found.\n");
-					draw_X(pair_square_1->next, image, 0, 0, 255);
-					draw_X(pair_square_2->next, image, 0, 0, 255);
-					draw_intersect_line(pair_square_1, pair_square_2, image, 0, 160, 255);
+					draw_X(sec_pair_square_1, image, 0, 0, 255);
+					draw_X(sec_pair_square_2, image, 0, 0, 255);
+					draw_intersect_line(pair_square_1, pair_square_2, sec_pair_square_1,
+							    sec_pair_square_2, image, 0, 160, 255);
 					
 				}
 			}
+			
 			else /* otherwise, mark the largest squares found */
 			{
 				largest = squares;
-				onlyLargest = 1;
+				
+				s = onlyLargest;
+				
 				draw_X(largest, image, 255, 0, 0);
 				
 				sq_idx = squares;
@@ -476,8 +496,7 @@ int main(int argv, char **argc) {
 					next_largest = sq_idx->next;
 					draw_X(next_largest, image, 255, 255, 0);
 					
-					onlyLargest = 0;
-					twoLargest = 1;
+					s = twoLargest;
 					printf ("Two Largest Found.\n");
 				}
 				else printf ("Only Largest Found.\n");
@@ -500,7 +519,7 @@ int main(int argv, char **argc) {
 		else if(square_count >= 5 && current_phase == 1){
 			printf("Rotating\n");
 			
-			if (hasPair || twoLargest){
+			if (s == hasOnePair || s == hasTwoPair || s == twoLargest){
 				current_phase = 2;
 				square_count++;
 				printf("New Path Found\n");
@@ -517,10 +536,10 @@ int main(int argv, char **argc) {
 			}
 		}
 		else{
-			/*if(hasPair) {
+			/*if(s == hasOnePair || s == hasTwoPair) {
 								
 				//get the difference in distance between each square and the center vertical line
-				x_dist_diff = get_square_diffence(pair_square_1, pair_square_2, image);
+				x_dist_diff = get_diff_in_x(pair_square_1, pair_square_2, image);
 				
 				if (prev_square_area_1 != 0 && prev_square_area_2 != 0 && 
 					pair_square_1->area < prev_square_area_1  && pair_square_2->area < prev_square_area_2 &&
@@ -554,7 +573,7 @@ int main(int argv, char **argc) {
 				
 				ri_move(&ri, RI_MOVE_FORWARD, 5);
 			}
-			else if(twoLargest) // when pair not detected, second biggest square is smaller than the first biggest square 
+			else if(s == twoLargest) // when pair not detected, second biggest square is smaller than the first biggest square 
 			{
 				
 				if (largest->center.x < next_largest->center.x){
@@ -570,7 +589,7 @@ int main(int argv, char **argc) {
 					ri_move(&ri, RI_STOP, 1);
 				}
 			}
-			else if(onlyLargest) // If we only find a single usable largest square 
+			else if(s == onlyLargest) // If we only find a single usable largest square 
 			{
 			 	//if both squares are at the left side of the center line
 				if (largest->center.x < image->width/2){
@@ -593,13 +612,13 @@ int main(int argv, char **argc) {
 			}*/
 			
 			//center robot code
-			if (hasPair){
+			if (s == hasOnePair || s == hasTwoPair){
 				center_robot(pair_square_1, pair_square_2, 0, image);
 			}
-			else if (twoLargest){
+			else if (s == twoLargest){
 				center_robot(largest, next_largest, 1, image);
 			}
-			else if (onlyLargest){
+			else if (s == onlyLargest){
 				center_robot(largest,NULL, 2, image);
 			}
 			else{
@@ -627,11 +646,11 @@ int main(int argv, char **argc) {
 		/* reset loop control variables */
 		pair_square_1 = NULL;
 		pair_square_2 = NULL;
+		sec_pair_square_1 = NULL;
+		sec_pair_square_2 = NULL;
 		largest = NULL;
 		next_largest = NULL;
-		hasPair = 0;
-		onlyLargest = 0;
-		twoLargest = 0;
+		s = noneFound;
 
 		// Move forward unless there's something in front of the robot
 		/*if(!ri_IR_Detected(&ri))
