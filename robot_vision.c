@@ -15,6 +15,10 @@
  * 
  * (Lines 267- 305 are the movement stuff)
  * 
+ * 03/30: 
+ * 	if (hasTwoPairs) use drift
+ * 	if (hasOnePair) use rotate
+ * 	if (two largest squares) use rotate 
  */
 
 #include "robot_if.h"
@@ -23,6 +27,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#define area_threshold 0.75
+#define multiplier 500
 void sort_squares(squares_t *squares) {
 	squares_t *sq_idx, 
 	          *counter;
@@ -130,7 +136,7 @@ int isPair(squares_t *square1, squares_t *square2, float area_ratio_threshold){/
 	same_square = is_same_square(square1, square2);
 	
 	/* if ratio greater than threshold, the difference in y is small, and they are NOT the same square */
-	if( (ratio > area_ratio_threshold ) && ( diff < 25 ) && !same_square )	return 1;
+	if( (ratio > area_ratio_threshold ) && ( diff < 30 ) && !same_square )	return 1;
 	//if( (ratio > area_ratio_threshold ) && !same_square )	return 1;
 	else									return 0;
 }
@@ -152,6 +158,65 @@ void draw_X(squares_t *s, IplImage *img, int R, int G, int B) {
 	pt2.x = s->center.x + sq_amt;
 	pt2.y = s->center.y - sq_amt;
 	cvLine(img, pt1, pt2, CV_RGB(R, G, B), 3, CV_AA, 0);
+}
+
+void draw_intersect_line(squares_t *square_1, squares_t *square_2, IplImage *image, int R, int G, int B) {
+	CvPoint start, end;
+	squares_t *temp;
+	//int sq_amt = (int) (sqrt(square->area) / 2);	
+	float slope;
+	
+	//square 1 on the left side
+	if (square_1->center.x < image->width/2){
+		if (square_1->next->center.x < image->width/2) temp = square_1->next;
+		else temp = square_2->next;
+		
+		slope = ((square_1->center.y - temp->center.y)/((float) square_1->center.x - (float) temp->center.x));
+		printf("square1 area = %d square2 area = %d slope = %f\n", square_1->area, temp->area, slope);
+		start.x = square_1->center.x;
+		start.y = square_1->center.y;
+		end.x = square_1->center.x + multiplier;
+		end.y = square_1->center.y + slope*multiplier;
+		
+	}
+	//square 1 on the right side
+	else{
+		if (square_1->next->center.x > image->width/2) temp = square_1->next;
+		else temp = square_2->next;
+		
+		slope = ((square_1->center.y - temp->center.y)/((float) square_1->center.x - (float) temp->center.x));
+		start.x = square_1->center.x;
+		start.y = square_1->center.y;
+		end.x = square_1->center.x - multiplier;
+		end.y = square_1->center.y - slope*multiplier;
+	}
+	cvLine(image, start, end, CV_RGB(R, G, B), 3, CV_AA, 0);
+	
+	//square 2 on the left side
+	if (square_2->center.x < image->width/2){
+		if (square_1->next->center.x < image->width/2) temp = square_1->next;
+		else temp = square_2->next;
+		
+		slope = ((square_2->center.y - temp->center.y)/((float)square_2->center.x - (float)temp->center.x));
+		start.x = square_2->center.x;
+		start.y = square_2->center.y;
+		end.x = square_2->center.x + multiplier;
+		end.y = square_2->center.y + slope*multiplier;
+	}
+	//square 2 on the right side
+	else{
+		if (square_1->next->center.x > image->width/2) temp = square_1->next;
+		else temp = square_2->next;
+		
+		slope = ((square_2->center.y - temp->center.y)/((float)square_2->center.x - (float)temp->center.x));
+		start.x = square_2->center.x;
+		start.y = square_2->center.y;
+		end.x = square_2->center.x - multiplier;
+		end.y = square_2->center.y - slope*multiplier;
+	}
+	cvLine(image, start, end, CV_RGB(R, G, B), 3, CV_AA, 0);
+	
+	
 }
 
 void draw_vertical_line(IplImage *img){
@@ -176,6 +241,60 @@ void printAreas(squares_t *squares) {
        }
 }
 
+//try to center the robot
+void center_robot(squares_t *square_1, squares_t * square_2, int option, IplImage *image){
+	int x_dist_diff;
+	//while (1){
+		switch (option){
+			//a pair squares
+			case 0:
+			{
+				x_dist_diff = get_square_diffence(square_1, square_2, image);
+				//rotate to the left
+				if (x_dist_diff < -40){
+					printf("Has pair.  Diff < - 40.  rotate left at speed = 6\n");
+					//ri_move(&ri, RI_TURN_LEFT, 6);
+					//printf("Has pair.  Diff < - 40.  strafe left at speed = 6\n");
+					//ri_move(&ri, RI_MOVE_LEFT, 6);
+				}
+				
+				//rotate to the right
+				else if (x_dist_diff > 40){
+					printf("Has pair.  Diff > 40.  rotate right at speed = 6\n");
+					//ri_move(&ri, RI_TURN_RIGHT, 6);	
+					//printf("Has pair.  Diff > 40.  strafe right at speed = 6\n");
+					//ri_move(&ri, RI_MOVE_RIGHT, 6);
+				}
+				break;
+			}
+			
+			//two largest square
+			case 1:
+			{
+				break;
+			}
+			
+			//one largest square
+			case 2:
+			{
+				break;
+			}
+				
+			//no squares
+			case 3:
+			{
+				break;
+			}
+			
+			default:
+			{
+				break;
+			}
+		}
+	//}
+	
+}
+
 int main(int argv, char **argc) {
 	robot_if_t ri;
 	int 	x_dist_diff, 
@@ -184,7 +303,8 @@ int main(int argv, char **argc) {
 		prev_square_area_2 = 0,
 		prev_square_area_3 = 0,
 		prev_square_area_4 = 0,
-		current_phase = 0; 
+		current_phase = 0, 
+		hasPair = 0;
 	IplImage *image = NULL, 
 		*hsv = NULL, 
 		*threshold_1 = NULL, 
@@ -196,8 +316,7 @@ int main(int argv, char **argc) {
 		*pair_square_1, 
 		*pair_square_2, 
 		*sq_idx;
-	bool 	hasPair = 0,
-		onlyLargest = 0,
+	bool 	onlyLargest = 0,
 		twoLargest = 0;
 	
 	
@@ -260,7 +379,6 @@ int main(int argv, char **argc) {
 
 		//when gort has been used
 		if (strcmp(argc[1], "gort") == 0){
-			printf("gort\n");
 			// Pick out the first range of pink color from the image
 			cvInRangeS(hsv, RC_PINK_LOW_1_gort, RC_PINK_HIGH_1_gort, threshold_1);
 			
@@ -268,7 +386,6 @@ int main(int argv, char **argc) {
 			cvInRangeS(hsv, RC_PINK_LOW_2_gort, RC_PINK_HIGH_2_gort, threshold_2);
 		}
 		else{
-			printf("bender\n");
 			// Pick out the first range of pink color from the image
 			cvInRangeS(hsv, RC_PINK_LOW_1_bender, RC_PINK_HIGH_1_bender, threshold_1);
 			
@@ -297,22 +414,47 @@ int main(int argv, char **argc) {
 			
 			while(sq_idx != NULL){
 				if(sq_idx->next == NULL) break;
-				else if(isPair(sq_idx, sq_idx->next, 0.75)){
-					hasPair = 1;
-					break;
+				else if(isPair(sq_idx, sq_idx->next, area_threshold)){
+					if (hasPair == 0 ){
+						
+						pair_square_1 = sq_idx;
+						pair_square_2 = sq_idx->next;
+						hasPair++;
+						
+						//sq_idx = sq_idx->next;
+					}
+					//make sure the same square doesn't appear twice
+					else if (hasPair == 1 && !is_same_square(pair_square_1, sq_idx) && 
+						!is_same_square(pair_square_1, sq_idx->next) && !is_same_square(pair_square_2, sq_idx) &&
+						!is_same_square(pair_square_2, sq_idx->next)){
+						
+						pair_square_1->next = sq_idx;
+						pair_square_2->next = sq_idx->next;
+						hasPair++;
+						
+						//sq_idx = sq_idx->next;
+					}
+					
+					
+					if (hasPair == 2)
+						break;
 				}
 				sq_idx = sq_idx->next;
 			}
 		
 			/* if pair is found, mark them for later use */	
-			if(hasPair){
-				printf("Pair found.\n");
-				
-				pair_square_1 = sq_idx;
-				pair_square_2 = sq_idx->next;
-				
+			if(hasPair == 1 || hasPair == 2){
 				draw_X(pair_square_1, image, 0, 255, 0);
 				draw_X(pair_square_2, image, 0, 255, 0);
+				
+				// if two pairs are found, draw the intersect line between them
+				if (hasPair == 2){
+					printf("2 Pairs found.\n");
+					draw_X(pair_square_1->next, image, 0, 0, 255);
+					draw_X(pair_square_2->next, image, 0, 0, 255);
+					draw_intersect_line(pair_square_1, pair_square_2, image, 0, 160, 255);
+					
+				}
 			}
 			else /* otherwise, mark the largest squares found */
 			{
@@ -449,6 +591,20 @@ int main(int argv, char **argc) {
 				ri_move(&ri, RI_MOVE_BACKWARD , 1);
 				
 			}*/
+			
+			//center robot code
+			if (hasPair){
+				center_robot(pair_square_1, pair_square_2, 0, image);
+			}
+			else if (twoLargest){
+				center_robot(largest, next_largest, 1, image);
+			}
+			else if (onlyLargest){
+				center_robot(largest,NULL, 2, image);
+			}
+			else{
+				center_robot(NULL, NULL, 3, image);
+			}
 		}
 
 		// display a straight vertical line

@@ -8,14 +8,14 @@
 
 /* Pink */
 #define RC_PINK		5
-#define RC_PINK_LOW_1_bender	cvScalar(0, 67, 100, 0)		//bender
-#define RC_PINK_HIGH_1_bender 	cvScalar(13, 255, 255, 0)
+#define RC_PINK_LOW_1_bender	cvScalar(0, 60, 130, 0)		//bender
+#define RC_PINK_HIGH_1_bender 	cvScalar(11, 255, 255, 0)
 
-#define RC_PINK_LOW_1_gort	cvScalar(0, 67, 100, 0)		//gort
-#define RC_PINK_HIGH_1_gort	cvScalar(10, 255, 255, 0)
-
-#define RC_PINK_LOW_2_bender	cvScalar(150, 67, 100, 0)	//bender
+#define RC_PINK_LOW_2_bender	cvScalar(150, 60, 130, 0)	//bender
 #define RC_PINK_HIGH_2_bender	cvScalar(190, 255, 255, 0)
+
+#define RC_PINK_LOW_1_gort	cvScalar(0, 60, 90, 0)		//gort
+#define RC_PINK_HIGH_1_gort	cvScalar(9, 255, 255, 0)
 
 #define RC_PINK_LOW_2_gort	cvScalar(150, 67, 100, 0) 	//gort
 #define RC_PINK_HIGH_2_gort	cvScalar(190, 255, 255, 0)
