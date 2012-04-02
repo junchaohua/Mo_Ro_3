@@ -19,7 +19,11 @@
  * 	if (hasTwoPair) use drift
  * 	if (hasOnePair) use rotate
  * 	if (two largest squares) use rotate 
- */
+ * 
+ * 04/01:
+ * 	- weighted average weight 1: 1404
+ * 	- weighted average weight 2: 1643 +-46
+ */	
 
 #include "robot_if.h"
 #include "robot_color.h"
@@ -197,6 +201,7 @@ int draw_intersect_line(squares_t *square_1, squares_t *square_2, squares_t *sec
 		end.y = square_1->center.y + slope1*multiplier;
 		
 	}
+	
 	//square 1 on the right side
 	else{
 		//get square_1 slope
@@ -223,6 +228,7 @@ int draw_intersect_line(squares_t *square_1, squares_t *square_2, squares_t *sec
 		end.x = square_2->center.x + multiplier;
 		end.y = square_2->center.y + slope2 *multiplier;
 	}
+	
 	//square 2 on the right side
 	else{
 		//get square_2 slope
@@ -345,7 +351,7 @@ int main(int argv, char **argc) {
 		*sec_pair_square_1,
 		*sec_pair_square_2,
 		*sq_idx;
-	square_state s;
+	square_state s = noneFound;
 	
 	
 	// Make sure we have a valid command line argument
@@ -451,7 +457,7 @@ int main(int argv, char **argc) {
 						pair_square_2 = sq_idx->next;
 												
 						s = hasOnePair;
-						//sq_idx = sq_idx->next;
+						sq_idx = sq_idx->next;
 					}
 					//make sure the same square doesn't appear twice
 					else if (s == hasOnePair && !is_same_square(pair_square_1, sq_idx) && 
@@ -485,9 +491,10 @@ int main(int argv, char **argc) {
 					printf("2 Pairs found.\n");
 					draw_X(sec_pair_square_1, image, 0, 0, 255);
 					draw_X(sec_pair_square_2, image, 0, 0, 255);
+					printf("end\n");
 					intersect_x = draw_intersect_line(pair_square_1, pair_square_2, sec_pair_square_1,
 							    sec_pair_square_2, image, 0, 160, 255);
-					printf("end\n");
+					;
 					
 				}
 			}
