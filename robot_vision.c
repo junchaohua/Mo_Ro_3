@@ -110,6 +110,10 @@ int get_diff_in_y(squares_t *square1, squares_t *square2){
 	//printf("square_1 y = %d\t square_2 y = %d\tdifference in y = %d\n", y_1, y_2, diff);
 	return diff;
 }
+//check the difference in area between two squares
+int get_diff_in_area(squares_t *square1, squares_t *square2){
+	return abs(square1->area - square2->area);
+}
 
 /* Get the ratio of area between two squares as Smaller Area / Larger Area */
 float getRatio(int x, int y) {  // x>y
@@ -278,7 +282,7 @@ void printAreas(squares_t *squares) {
 }
 
 //try to center the robot
-void center_robot(squares_t *square_1, squares_t *square_2, square_state option, IplImage *image){
+void center_robot(squares_t *square_1, squares_t *square_2, square_state option, IplImage *image, robot_if_t ri){
 	int x_dist_diff;
 	
 	
@@ -289,7 +293,7 @@ void center_robot(squares_t *square_1, squares_t *square_2, square_state option,
 	// 4. Check pointing to center and areas once more (repeat 1, 2, 3 if necc)
 	// 5. Report on center
 	
-	while (s != hasTwoPair){
+	while (option != hasTwoPair){
 		/* get squares list and identify states */
 		
 		switch (option){
@@ -326,13 +330,13 @@ void center_robot(squares_t *square_1, squares_t *square_2, square_state option,
 			//one largest square
 			case twoLargest:
 			{
-				if (largest->center.x < next_largest->center.x){
+				if (square_1->center.x < square_2->center.x){
 					printf("Both squares left of center line.  rotate right at speed = 6\n");
 					ri_move(&ri, RI_TURN_RIGHT, 6);
 					ri_move(&ri, RI_STOP, 1);
 				}
 				//If largest is to the RIGHT of the next largest, turn left
-				else if (largest->center.x > image->width/2 && next_largest->center.x >
+				else if (square_1->center.x > image->width/2 && square_2->center.x >
 					image->width/2){
 					printf("Both squares right of center line.  rotate left at speed = 6\n");
 					ri_move(&ri, RI_TURN_LEFT, 6);
@@ -345,13 +349,13 @@ void center_robot(squares_t *square_1, squares_t *square_2, square_state option,
 			case onlyLargest:
 			{
 				//if both squares are at the left side of the center line
-				if (largest->center.x < image->width/2){
+				if (square_1->center.x < image->width/2){
 					printf("Only Largest Found on left.  rotate right at speed = 6\n");
 					ri_move(&ri, RI_TURN_RIGHT, 3);
 					ri_move(&ri, RI_STOP, 1);
 				}
 				//if both squares are at the right side of the center line
-				else if (largest->center.x > image->width/2){
+				else if (square_1->center.x > image->width/2){
 					printf("Only Largest Found on right.  rotate left at speed = 6\n");
 					ri_move(&ri, RI_TURN_LEFT, 3);
 					ri_move(&ri, RI_STOP, 1);
@@ -362,13 +366,13 @@ void center_robot(squares_t *square_1, squares_t *square_2, square_state option,
 			default:
 			{
 				//if both squares are at the left side of the center line
-				if (largest->center.x < image->width/2){
+				if (square_1->center.x < image->width/2){
 					printf("Only Largest Found on left.  rotate right at speed = 6\n");
 					ri_move(&ri, RI_TURN_RIGHT, 3);
 					ri_move(&ri, RI_STOP, 1);
 				}
 				//if both squares are at the right side of the center line
-				else if (largest->center.x > image->width/2){
+				else if (square_1->center.x > image->width/2){
 					printf("Only Largest Found on right.  rotate left at speed = 6\n");
 					ri_move(&ri, RI_TURN_LEFT, 3);
 					ri_move(&ri, RI_STOP, 1);
@@ -378,7 +382,7 @@ void center_robot(squares_t *square_1, squares_t *square_2, square_state option,
 		}
 	}
 	
-	while(
+	//while(
 	
 }
 
@@ -388,7 +392,8 @@ int main(int argv, char **argc) {
 		square_count = 0, 
 		current_phase = 0, 
 		intersect_x = 0,
-		avg_pair_area;
+		avg_pair_area,
+		area_diff;
 	IplImage *image = NULL, 
 		*hsv = NULL, 
 		*threshold_1 = NULL, 
@@ -516,7 +521,7 @@ int main(int argv, char **argc) {
 						!is_same_square(pair_square_2, sq_idx) &&
 						!is_same_square(pair_square_2, sq_idx->next)) {
 						
-						printf("Found Second Pair!");
+						printf("Found Second Pair!\n");
 						sec_pair_square_1 = sq_idx;
 						sec_pair_square_2 = sq_idx->next;
 						s = hasTwoPair;
@@ -534,7 +539,8 @@ int main(int argv, char **argc) {
 				draw_X(pair_square_2, image, 0, 255, 0);
 				
 				avg_pair_area = get_pair_average_area(pair_square_1, pair_square_2);
-				printf("weight average area = %d\n", avg_pair_area);
+				area_diff = get_diff_in_area(pair_square_1, pair_square_2);
+				printf("weight average area = %d\t difference in area = %d\n", avg_pair_area, area_diff);
 				
 				// if two pairs are found, draw the intersect line between them
 				if (s == hasTwoPair){
@@ -687,18 +693,18 @@ int main(int argv, char **argc) {
 			}*/
 			
 			//center robot code
-			if (s == hasOnePair || s == hasTwoPair){
-				center_robot(pair_square_1, pair_square_2, 0, image);
+			/*if (s == hasOnePair || s == hasTwoPair){
+				center_robot(pair_square_1, pair_square_2, 0, image, ri);
 			}
 			else if (s == twoLargest){
-				center_robot(largest, next_largest, 1, image);
+				center_robot(largest, next_largest, 1, image, ri);
 			}
 			else if (s == onlyLargest){
-				center_robot(largest,NULL, 2, image);
+				center_robot(largest,NULL, 2, image, ri);
 			}
 			else{
-				center_robot(NULL, NULL, 3, image);
-			}
+				center_robot(NULL, NULL, 3, image, ri);
+			}*/
 		}
 
 		// display a straight vertical line
