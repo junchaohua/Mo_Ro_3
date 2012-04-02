@@ -345,7 +345,7 @@ int main(int argv, char **argc) {
 		*sec_pair_square_1,
 		*sec_pair_square_2,
 		*sq_idx;
-	square_state s;
+	square_state s = noneFound;
 	
 	
 	// Make sure we have a valid command line argument
@@ -446,25 +446,24 @@ int main(int argv, char **argc) {
 				
 				else if(isPair(sq_idx, sq_idx->next, area_threshold)){
 					if (s == noneFound ){
-						
+						printf("Got One Pair!\n");
 						pair_square_1 = sq_idx;
 						pair_square_2 = sq_idx->next;
-												
+						
 						s = hasOnePair;
-						//sq_idx = sq_idx->next;
+						sq_idx = sq_idx->next;
 					}
 					//make sure the same square doesn't appear twice
 					else if (s == hasOnePair && !is_same_square(pair_square_1, sq_idx) && 
 						!is_same_square(pair_square_1, sq_idx->next) && 
 						!is_same_square(pair_square_2, sq_idx) &&
-						!is_same_square(pair_square_2, sq_idx->next)){
+						!is_same_square(pair_square_2, sq_idx->next)) {
 						
+						printf("Found Second Pair!");
 						sec_pair_square_1 = sq_idx;
 						sec_pair_square_2 = sq_idx->next;
 						s = hasTwoPair;
 						
-						//sq_idx = sq_idx->next;
-					
 						break;
 					}
 					
@@ -675,7 +674,8 @@ int main(int argv, char **argc) {
 			ri_move(&ri, RI_MOVE_FORWARD, RI_SLOWEST);*/
 		//printf("Loop Complete\n");
 		printf("Square Count = %d\n", square_count);
-		//getc(stdin);
+		
+		getc(stdin);
 	} while(1);
 
 	// Clean up (although we'll never get here...)
