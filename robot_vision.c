@@ -280,16 +280,34 @@ void printAreas(squares_t *squares) {
 //try to center the robot
 void center_robot(squares_t *square_1, squares_t *square_2, square_state option, IplImage *image){
 	int x_dist_diff;
-	//while (1){
+	
+	
+	// 
+	// 1. Point to Center (find pairs)
+	// 2. Once pointing to center, strafe to even out areas (do once then repeat 1)
+	// 3. Once area roughly equal, move forwards or backwards to ensure centered
+	// 4. Check pointing to center and areas once more (repeat 1, 2, 3 if necc)
+	// 5. Report on center
+	
+	while (s != hasTwoPair){
+		/* get squares list and identify states */
+		
 		switch (option){
-			//a pair squares
+			// Two Pairs means we can use 
 			case hasTwoPair:
+			{
+				
+				break;
+			}
+			
+			//two largest square
+			case hasOnePair:
 			{
 				x_dist_diff = get_diff_in_x(square_1, square_2, image);
 				//rotate to the left
 				if (x_dist_diff < -40){
 					printf("Has pair.  Diff < - 40.  rotate left at speed = 6\n");
-					//ri_move(&ri, RI_TURN_LEFT, 6);
+					ri_move(&ri, RI_TURN_LEFT, 6);
 					//printf("Has pair.  Diff < - 40.  strafe left at speed = 6\n");
 					//ri_move(&ri, RI_MOVE_LEFT, 6);
 				}
@@ -297,37 +315,70 @@ void center_robot(squares_t *square_1, squares_t *square_2, square_state option,
 				//rotate to the right
 				else if (x_dist_diff > 40){
 					printf("Has pair.  Diff > 40.  rotate right at speed = 6\n");
-					//ri_move(&ri, RI_TURN_RIGHT, 6);	
+					ri_move(&ri, RI_TURN_RIGHT, 6);	
 					//printf("Has pair.  Diff > 40.  strafe right at speed = 6\n");
 					//ri_move(&ri, RI_MOVE_RIGHT, 6);
 				}
-				break;
-			}
-			
-			//two largest square
-			case hasOnePair:
-			{
+				
 				break;
 			}
 			
 			//one largest square
 			case twoLargest:
 			{
+				if (largest->center.x < next_largest->center.x){
+					printf("Both squares left of center line.  rotate right at speed = 6\n");
+					ri_move(&ri, RI_TURN_RIGHT, 6);
+					ri_move(&ri, RI_STOP, 1);
+				}
+				//If largest is to the RIGHT of the next largest, turn left
+				else if (largest->center.x > image->width/2 && next_largest->center.x >
+					image->width/2){
+					printf("Both squares right of center line.  rotate left at speed = 6\n");
+					ri_move(&ri, RI_TURN_LEFT, 6);
+					ri_move(&ri, RI_STOP, 1);
+				}
 				break;
 			}
 				
 			//no squares
 			case onlyLargest:
 			{
+				//if both squares are at the left side of the center line
+				if (largest->center.x < image->width/2){
+					printf("Only Largest Found on left.  rotate right at speed = 6\n");
+					ri_move(&ri, RI_TURN_RIGHT, 3);
+					ri_move(&ri, RI_STOP, 1);
+				}
+				//if both squares are at the right side of the center line
+				else if (largest->center.x > image->width/2){
+					printf("Only Largest Found on right.  rotate left at speed = 6\n");
+					ri_move(&ri, RI_TURN_LEFT, 3);
+					ri_move(&ri, RI_STOP, 1);
+				} 
 				break;
 			}
 			
 			default:
 			{
+				//if both squares are at the left side of the center line
+				if (largest->center.x < image->width/2){
+					printf("Only Largest Found on left.  rotate right at speed = 6\n");
+					ri_move(&ri, RI_TURN_RIGHT, 3);
+					ri_move(&ri, RI_STOP, 1);
+				}
+				//if both squares are at the right side of the center line
+				else if (largest->center.x > image->width/2){
+					printf("Only Largest Found on right.  rotate left at speed = 6\n");
+					ri_move(&ri, RI_TURN_LEFT, 3);
+					ri_move(&ri, RI_STOP, 1);
+				} 
 				break;
 			}
 		}
-	//}
+	}
+	
+	while(
 	
 }
 
@@ -682,7 +733,7 @@ int main(int argv, char **argc) {
 		//printf("Loop Complete\n");
 		printf("Square Count = %d\n", square_count);
 		
-		getc(stdin);
+		// getc(stdin);
 	} while(1);
 
 	// Clean up (although we'll never get here...)
