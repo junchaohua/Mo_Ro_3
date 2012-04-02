@@ -281,18 +281,155 @@ void printAreas(squares_t *squares) {
        }
 }
 
-square_state get_squares(squares_t *square_list) {
-  
+square_state get_squares(squares_t *square_list, IplImage *image,IplImage *threshold) {
+	squares_t *squares,
+		*sq_idx;
+	square_state s = noneFound;
+	int 	avg_pair_area,
+		area_diff,
+		intersect_x;
+	// Find the squares in the image
+	squares = ri_find_squares(threshold, RI_DEFAULT_SQUARE_SIZE);
+	
+	/* If any squares are found */
+	if( squares != NULL ) {
+		/* sort squares from largest to smallest */
+		sort_squares(squares);
+		
+		printAreas(squares);
+		
+		//find largest useful pair (if they exist)
+		sq_idx = squares;
+		
+		// Search for pairs
+		while(sq_idx != NULL){
+			if(sq_idx->next == NULL) break;
+			
+			else if(isPair(sq_idx, sq_idx->next, area_threshold)){
+				if (s == noneFound ){
+					printf("Got One Pair!\n");
+					square_list = sq_idx;
+					square_list->next = sq_idx->next;
+					
+					s = hasOnePair;
+					sq_idx = sq_idx->next;
+				}
+				//make sure the same square doesn't appear twice
+				else if (s == hasOnePair && !is_same_square(square_list, sq_idx) && 
+					!is_same_square(square_list, sq_idx->next) && 
+					!is_same_square(square_list->next, sq_idx) &&
+					!is_same_square(square_list->next, sq_idx->next)) {
+					
+					printf("Found Second Pair!\n");
+					square_list->next->next = sq_idx;
+					square_list->next->next->next = sq_idx->next;
+					s = hasTwoPair;
+					
+					break;
+				}
+				
+			}
+			sq_idx = sq_idx->next;
+		}
+	
+		/* if pair is found, mark them for later use */	
+		if(s == hasOnePair || s == hasTwoPair){
+			draw_X(square_list, image, 0, 255, 0);
+			draw_X(square_list->next, image, 0, 255, 0);
+			
+			avg_pair_area = get_pair_average_area(square_list, square_list->next);
+			area_diff = get_diff_in_area(square_list, square_list->next);
+			printf("weight average area = %d\t difference in area = %d\n", avg_pair_area, area_diff);
+			
+			// if two pairs are found, draw the intersect line between them
+			if (s == hasTwoPair){
+				printf("2 Pairs found.\n");
+				draw_X(square_list->next->next, image, 0, 0, 255);
+				draw_X(square_list->next->next->next, image, 0, 0, 255);
+				
+				intersect_x = draw_intersect_line(square_list, square_list->next,square_list->next->next,
+								  square_list->next->next->next, image, 0, 160, 255);
+				;
+				
+			}
+		}
+		
+		else /* otherwise, mark the largest squares found */
+		{
+			square_list = squares;
+			
+			s = onlyLargest;
+			
+			draw_X(square_list, image, 255, 0, 0);
+			
+			sq_idx = squares;
+			
+			while(sq_idx != NULL){
+				if(sq_idx->next == NULL) break;
+				else if(!is_same_square(sq_idx, sq_idx->next) ){
+					break;
+				}
+				sq_idx = sq_idx->next;
+			}
+			
+			if(sq_idx->next != NULL) {
+				square_list->next = sq_idx->next;
+				draw_X(square_list->next, image, 255, 255, 0);
+				
+				s = twoLargest;
+				printf ("Two Largest Found.\n");
+			}
+			else printf ("Only Largest Found.\n");
+		}
+	}
+	return s;
 }
 
 //try to center the robot
-void center_robot(squares_t *square_1, squares_t *square_2, square_state option, IplImage *image, robot_if_t ri){
-	int x_dist_diff,
-	    last_largest_x = -1,
-	    pair_diff,
-	    avg_area;
+void center_robot(robot_if_t ri, IplImage *image, IplImage *final_threshold, char *bot_name){
+	int x_dist_diff;
+	IplImage *hsv = NULL, 
+		*threshold_1 = NULL, 
+		*threshold_2 = NULL;
+ 	squares_t *square_list = NULL;
+	square_state state = noneFound;
 	
+	/* initialize threshold image */
+	// Create an image to store the HSV version in
+	// We configured the camera for 640x480 above, so use that size here
+	hsv = cvCreateImage(cvSize(640, 480), IPL_DEPTH_8U, 3);
+
+	// And an image for each thresholded version
+	threshold_1 = cvCreateImage(cvSize(640, 480), IPL_DEPTH_8U, 1);
+	threshold_2 = cvCreateImage(cvSize(640, 480), IPL_DEPTH_8U, 1);
 	
+	// Convert the image from RGB to HSV
+	cvCvtColor(image, hsv, CV_BGR2HSV);
+
+	//when gort has been used
+	if (strcmp(bot_name, "gort") == 0){
+		// Pick out the first range of pink color from the image
+		cvInRangeS(hsv, RC_PINK_LOW_1_gort, RC_PINK_HIGH_1_gort, threshold_1);
+		
+		// Pick out the second range of pink color from the image
+		cvInRangeS(hsv, RC_PINK_LOW_2_gort, RC_PINK_HIGH_2_gort, threshold_2);
+	}
+	else{
+		// Pick out the first range of pink color from the image
+		cvInRangeS(hsv, RC_PINK_LOW_1_bender, RC_PINK_HIGH_1_bender, threshold_1);
+		
+		// Pick out the second range of pink color from the image
+		cvInRangeS(hsv, RC_PINK_LOW_2_bender, RC_PINK_HIGH_2_bender, threshold_2);
+	}
+	
+	// compute the final threshold image by using cvOr
+	cvOr(threshold_1, threshold_2, final_threshold, NULL);
+	/* show final thresholded image for testing */
+	cvShowImage("Thresholded", final_threshold);
+		
+	//find the squares list
+	state = get_squares(square_list, image, final_threshold);
+		
 	// State machine
 	// 1. Point to Center (find pairs)
 	// 2. Once pointing to center, strafe to even out areas, repeat 1. if necc
@@ -300,8 +437,8 @@ void center_robot(squares_t *square_1, squares_t *square_2, square_state option,
 	// 4. Check pointing to center and areas once more
 	// 5. Report on center
 	
-	while (option != hasTwoPair){
-		/* get squares list and identify states */
+	/*while (option != hasTwoPair){
+		// get squares list and identify states 
 		
 		switch (option){
 			switch (option){
@@ -310,7 +447,6 @@ void center_robot(squares_t *square_1, squares_t *square_2, square_state option,
 				{
 					last_largest_x = -1;
 					x_dist_diff = get_diff_in_x(square_1, square_2, image);
-					
 					//rotate to the left
 					if (x_dist_diff < -40){
 						printf("Has pair.  Diff < - 40.  rotate left at speed = 6\n");
@@ -415,7 +551,7 @@ void center_robot(squares_t *square_1, squares_t *square_2, square_state option,
 				}
 			}
 			
-			/* get squares list and identify state */
+			// get squares list and identify state 
 		}
 		
 	strafeTo:
@@ -445,7 +581,7 @@ void center_robot(squares_t *square_1, squares_t *square_2, square_state option,
 				}
 			}
 			
-			/* get squares list and identify state */
+			// get squares list and identify state 
 		
 			if (s != hasTwoPair) goto pointTo;
 		}
@@ -454,31 +590,26 @@ void center_robot(squares_t *square_1, squares_t *square_2, square_state option,
 		while(avg_area < 1597 && avg_area > 1689) {
 		  
 		}
-	
+	*/
 }
 
 int main(int argv, char **argc) {
 	robot_if_t ri;
-	int 	x_dist_diff, 
+	/*int 	x_dist_diff, 
 		square_count = 0, 
 		current_phase = 0, 
-		intersect_x = 0,
-		avg_pair_area,
-		area_diff;
+		intersect_x = 0;
+	*/
 	IplImage *image = NULL, 
-		*hsv = NULL, 
-		*threshold_1 = NULL, 
-		*threshold_2 = NULL, 
 		*final_threshold = NULL;
-	squares_t *squares, 
+	/*squares_t *squares, 
 		*largest,
 		*next_largest,
 		*pair_square_1, 
 		*pair_square_2,
 		*sec_pair_square_1,
 		*sec_pair_square_2,
-		*sq_idx;
-	square_state s = noneFound;
+		*sq_idx;*/
 	
 	
 	// Make sure we have a valid command line argument
@@ -507,13 +638,6 @@ int main(int argv, char **argc) {
 	// Create an image to store the image from the camera
 	image = cvCreateImage(cvSize(640, 480), IPL_DEPTH_8U, 3);
 
-	// Create an image to store the HSV version in
-	// We configured the camera for 640x480 above, so use that size here
-	hsv = cvCreateImage(cvSize(640, 480), IPL_DEPTH_8U, 3);
-
-	// And an image for each thresholded version
-	threshold_1 = cvCreateImage(cvSize(640, 480), IPL_DEPTH_8U, 1);
-	threshold_2 = cvCreateImage(cvSize(640, 480), IPL_DEPTH_8U, 1);
 	final_threshold = cvCreateImage(cvSize(640, 480), IPL_DEPTH_8U, 1);
 
 	/* end of constructor */
@@ -537,37 +661,14 @@ int main(int argv, char **argc) {
 		/* for testing */
 		//cvShowImage("Rovio Camera", image);
 
-		// Convert the image from RGB to HSV
-		cvCvtColor(image, hsv, CV_BGR2HSV);
-
-		//when gort has been used
-		if (strcmp(argc[1], "gort") == 0){
-			// Pick out the first range of pink color from the image
-			cvInRangeS(hsv, RC_PINK_LOW_1_gort, RC_PINK_HIGH_1_gort, threshold_1);
-			
-			// Pick out the second range of pink color from the image
-			cvInRangeS(hsv, RC_PINK_LOW_2_gort, RC_PINK_HIGH_2_gort, threshold_2);
-		}
-		else{
-			// Pick out the first range of pink color from the image
-			cvInRangeS(hsv, RC_PINK_LOW_1_bender, RC_PINK_HIGH_1_bender, threshold_1);
-			
-			// Pick out the second range of pink color from the image
-			cvInRangeS(hsv, RC_PINK_LOW_2_bender, RC_PINK_HIGH_2_bender, threshold_2);
-		}
+		center_robot(ri, image, final_threshold, argc[1]);
 		
-		// compute the final threshold image by using cvOr
-		cvOr(threshold_1, threshold_2, final_threshold, NULL);
-		
-		/* show final thresholded image for testing */
-		cvShowImage("Thresholded", final_threshold);
-		
-		// Find the squares in the image
+		/*// Find the squares in the image
 		squares = ri_find_squares(final_threshold, RI_DEFAULT_SQUARE_SIZE);
 		
-		/* If any squares are found */
+		// If any squares are found 
 		if( squares != NULL ) {
-			/* sort squares from largest to smallest */
+			// sort squares from largest to smallest 
 			sort_squares(squares);
 			
 			printAreas(squares);
@@ -606,7 +707,7 @@ int main(int argv, char **argc) {
 				sq_idx = sq_idx->next;
 			}
 		
-			/* if pair is found, mark them for later use */	
+			// if pair is found, mark them for later use 
 			if(s == hasOnePair || s == hasTwoPair){
 				draw_X(pair_square_1, image, 0, 255, 0);
 				draw_X(pair_square_2, image, 0, 255, 0);
@@ -628,7 +729,7 @@ int main(int argv, char **argc) {
 				}
 			}
 			
-			else /* otherwise, mark the largest squares found */
+			else // otherwise, mark the largest squares found 
 			{
 				largest = squares;
 				
@@ -655,11 +756,11 @@ int main(int argv, char **argc) {
 				}
 				else printf ("Only Largest Found.\n");
 			}
-		}
+		}*/
 		
 		//we only see the last pair of squares, go straight ahead and make a 90 degree right turn
 		
-		if (square_count >= 4 && current_phase == 0){
+		/*if (square_count >= 4 && current_phase == 0){
 			printf("Moving forward, count equals 4\n");
 			ri_move(&ri, RI_MOVE_FORWARD, 5);
 			if (ri_IR_Detected(&ri)) {
@@ -689,7 +790,7 @@ int main(int argv, char **argc) {
 				break;
 			}
 		}
-		else{
+		else{*/
 			/*if(s == hasOnePair || s == hasTwoPair) {
 								
 				//get the difference in distance between each square and the center vertical line
@@ -778,7 +879,7 @@ int main(int argv, char **argc) {
 			else{
 				center_robot(NULL, NULL, 3, image, ri);
 			}*/
-		}
+		//}
 
 		// display a straight vertical line
 		draw_vertical_line(image);
@@ -790,27 +891,18 @@ int main(int argv, char **argc) {
 		cvWaitKey(10);
 	
 		// Release the square data
-		while(squares != NULL) 
+		/*while(squares != NULL) 
 		{
 			sq_idx = squares->next;
 			free(squares);
 			squares = sq_idx;	
-		}
+		}*/
 		
-		/* reset loop control variables */
-		pair_square_1 = NULL;
-		pair_square_2 = NULL;
-		sec_pair_square_1 = NULL;
-		sec_pair_square_2 = NULL;
-		largest = NULL;
-		next_largest = NULL;
-		s = noneFound;
-
 		// Move forward unless there's something in front of the robot
 		/*if(!ri_IR_Detected(&ri))
 			ri_move(&ri, RI_MOVE_FORWARD, RI_SLOWEST);*/
 		//printf("Loop Complete\n");
-		printf("Square Count = %d\n", square_count);
+		//printf("Square Count = %d\n", square_count);
 		
 		// getc(stdin);
 	} while(1);
@@ -822,10 +914,7 @@ int main(int argv, char **argc) {
 	cvDestroyWindow("Thresholded");
 	
 	// Free the images
-	cvReleaseImage(&threshold_1);
-	cvReleaseImage(&threshold_2);
 	cvReleaseImage(&final_threshold);
-	cvReleaseImage(&hsv);
 	cvReleaseImage(&image);
 
 	return 0;
