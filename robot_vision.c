@@ -465,7 +465,8 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 			change_dir = 0,
 			last_largest_x = -1,
 			avg_area,
-			i;
+			i,
+			last_turn_dir = 0;
 	float		slope_diff = 1.0,
 			tol = 0.05;
 	squares_t 	*square_list = NULL,
