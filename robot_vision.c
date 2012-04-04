@@ -650,8 +650,6 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 	ri_move(ri, RI_HEAD_DOWN, RI_FASTEST);
 }
 
-
-/*
 int main(int argv, char **argc) {
 	robot_if_t 	ri;
 	IplImage	*image = NULL, 
@@ -702,4 +700,4 @@ int main(int argv, char **argc) {
 	cvReleaseImage(&image);
 
 	return 0;
-} */
+}
