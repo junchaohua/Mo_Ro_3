@@ -628,7 +628,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 			}
 			else if(avg_area > 1622) {
 				printf("Too far forward.  Moving backwards.\n");
-				ri_move(ri, RI_MOVE_BACKWARD, 6);
+				ri_move(ri, RI_MOVE_BACKWARD, 7);
 				//ri_move(ri, RI_STOP, 10);
 			}
 			

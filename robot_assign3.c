@@ -24,7 +24,7 @@
 #define R_Ki 0.5
 #define R_Kd 0.20
 
-#define FWD_PID_TOLERANCE  10.0  /*How close should I be to the waypoint before moving onto the next one? */
+#define FWD_PID_TOLERANCE  15.0  /*How close should I be to the waypoint before moving onto the next one? */
 
 /* GLOBALS */
 PID 	*fwdPID,
@@ -299,8 +299,8 @@ int printmenu(){
 	printf("\t4. Turn around (180 degrees).\n");
 	printf("\t5. Just Center.\n");
 	
-	while(input < 0 || input > 4) {
-		printf("Please choose a command (0 - 4):\t");
+	while(input < 0 || input > 5) {
+		printf("Please choose a command (0 - 5):\t");
 		input = getc(stdin) - '0';
 		printf("\n");
 	}
