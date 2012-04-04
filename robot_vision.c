@@ -484,6 +484,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 	
 	pointTo:
 		while (state != hasTwoPair){
+			//)getc(stdin;
 			printf("In pointTo State!\n");
 			switch (state){
 				case hasOnePair:
@@ -531,12 +532,12 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 					
 				case onlyLargest:
 				{
-					/* if this isn't the first time we've seen only largest */
+					// if this isn't the first time we've seen only largest 
 					if(last_largest_x > -1 && change_dir == 0) {
-						/* check to see if square crossed center going left, change direction to right */
+						// check to see if square crossed center going left, change direction to right 
 						if(last_largest_x > image->width/2 && square_list->center.x <= image->width/2)
 							change_dir = 1;
-						/* check to see if square crossed center going right, change direction to left */
+						// check to see if square crossed center going right, change direction to left 
 						else if(last_largest_x < image->width/2 && square_list->center.x >= image->width/2)
 							change_dir = 2;
 					}
@@ -557,7 +558,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 						
 						last_largest_x = square_list->center.x;
 					}
-					else if (change_dir == 1) {  /* turn right */
+					else if (change_dir == 1) {  // turn right 
 						printf("You crossed the line rotating left!  Changing to rotate right!\n");
 						ri_move(ri, RI_TURN_RIGHT, 3);
 						ri_move(ri, RI_STOP, 10);
@@ -572,7 +573,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 					break;
 				}
 				
-				/* none found, possibly return a value to indicate as much */
+				// none found, possibly return a value to indicate as much 
 				default:
 				{ 
 					break;
@@ -616,17 +617,18 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 	        avg_area = get_pair_average_area(square_list, square_list->next);
 		printf("Average area = %d\n", avg_area);
 		
-		while(avg_area < 1478 || avg_area > 1622) {  // 1550 +- 72
+		// 1550 +- 72
+		while(avg_area < 1478 || avg_area > 1622) { 
 			printf("In moveTo State!\n");
 			
 			if(avg_area < 1478) {
 				printf("Too far back.  Moving forwards.\n");
-				ri_move(ri, RI_MOVE_FORWARD, 10);
-				//ri_move(ri, RI_STOP, 10);
+				ri_move(ri, RI_MOVE_FORWARD, 2);
+				ri_move(ri, RI_STOP, 10);
 			}
 			else if(avg_area > 1622) {
 				printf("Too far forward.  Moving backwards.\n");
-				ri_move(ri, RI_MOVE_BACKWARD, 10);
+				ri_move(ri, RI_MOVE_BACKWARD, 6);
 				//ri_move(ri, RI_STOP, 10);
 			}
 			
@@ -646,7 +648,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 		square_list = sq_idx;
 	}
 	
-	/* put head down for future movement */
+	// put head down for future movement 
 	ri_move(ri, RI_HEAD_DOWN, RI_FASTEST);
 }
 
