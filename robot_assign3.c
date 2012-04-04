@@ -263,7 +263,7 @@ void go_to_position(robot_if_t *ri, IplImage *image,  float end_x, float end_y, 
 		/* decriment i for wind up */
 		i--;
 		
-		//refresh current position values and see if bot changed rooms.  If it does, reset scaling factor
+		//refresh current position values and see if bot changed rooms.
    		get_Position(ri, current_location, expected_vel, FORWARD);
 		
 		/* show the bot moving */
