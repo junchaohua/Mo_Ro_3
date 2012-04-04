@@ -289,53 +289,64 @@ void battery_check( robot_if_t *ri ) {
 /* MAIN */
 
 int main(int argv, char **argc) {
-	robot_if_t ri;
-	//vector 	*location = (vector *)calloc(1, sizeof(vector));
-	float 	target_x,
-		target_y;
-	    
-	float waypoints[NUMBER_OF_WAYPOINTS][2] = WAYPOINT_COORDS;//WAYPOINT_COORDS;
-	int numWayPoints = NUMBER_OF_WAYPOINTS, index;
-	        
+robot_if_t ri;
+vector *loc,
+*vel;
+float target_x,
+target_y;
+
+float waypoints[NUMBER_OF_WAYPOINTS][2] = WAYPOINT_COORDS;//WAYPOINT_COORDS;
+int numWayPoints = NUMBER_OF_WAYPOINTS, index;
+
         // Setup the robot with the address passed in
         if(ri_setup(&ri, argc[1], 0)) printf("Failed to setup the robot!\n");
-	
-	if(ri_getHeadPosition(&ri) != RI_ROBOT_HEAD_LOW ) ri_move(&ri, RI_HEAD_DOWN , 1);
-	
-	// Check condition of battery, exit if not enough charge
-	//battery_check(&ri);
 
-	// Initialize PID controllers
-	fwdPID = calloc(1, sizeof(PID));
-	rotPID = calloc(1, sizeof(PID));
-	init_PID(fwdPID, F_Kp, F_Ki, F_Kd);
-	init_PID(rotPID, R_Kp, R_Ki, R_Kd);
-	
-	// Retrieve initial position, initailize current and last
-	init_pos(&ri);
+if(ri_getHeadPosition(&ri) != RI_ROBOT_HEAD_LOW ) ri_move(&ri, RI_HEAD_DOWN , 1);
 
-	//waypoint nav:
-	for(index = 0; index < numWayPoints; index++){
-		target_x = waypoints[index][0];
-		target_y = waypoints[index][1];
-		go_to_position(&ri, target_x, target_y);
-		/*
-		if(!ri_IR_Detected(&ri)) {
-			printf("I found an obstacle!  Stopping!\n\n");
-			exit(-10);
-		}
-		*/
-		printf("\n *********************  Waypoint %d Reached  ********************\n\n", (index+1));
-		//ri_move(&ri, RI_HEAD_MIDDLE , 1);
-		//ri_move(&ri, RI_HEAD_DOWN , 1);
-		
-		getc(stdin);
-	}
-	
-	free(fwdPID);
-	free(rotPID);
-	
-	exit_pos();
-	
-	return 0;
+// Check condition of battery, exit if not enough charge
+//battery_check(&ri);
+
+loc = (vector *)calloc(1, sizeof(vector));
+vel = (vector *)calloc(1, sizeof(vector));
+
+// Initialize PID controllers
+fwdPID = calloc(1, sizeof(PID));
+rotPID = calloc(1, sizeof(PID));
+init_PID(fwdPID, F_Kp, F_Ki, F_Kd);
+init_PID(rotPID, R_Kp, R_Ki, R_Kd);
+
+// Retrieve initial position, initailize current and last
+init_pos(&ri);
+
+//cvNamedWindow("Rovio Camera", CV_WINDOW_AUTOSIZE);
+cvNamedWindow("Square Display", CV_WINDOW_AUTOSIZE);
+cvNamedWindow("Thresholded", CV_WINDOW_AUTOSIZE);
+
+//waypoint nav:
+for(index = 0; index < numWayPoints; index++){
+target_x = waypoints[index][0];
+target_y = waypoints[index][1];
+go_to_position(&ri, target_x, target_y);
+
+printf("\n ********************* Waypoint %d Reached ********************\n\n", (index+1));
+
+center(&ri);
+
+if(index == 4) {
+get_Position(&ri, loc, vel, FORWARD);
+rotate_to_theta(&ri, -M_PI/2.0, loc);
+}
+}
+
+free(fwdPID);
+free(rotPID);
+free(loc);
+free(vel);
+
+exit_pos();
+
+cvDestroyWindow("Square Display");
+cvDestroyWindow("Thresholded");
+
+return 0;
 }
