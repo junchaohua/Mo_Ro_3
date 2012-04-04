@@ -548,14 +548,14 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 					}
 					
 					if (change_dir == 0) {
-					//if both squares are at the left side of the center line
+					
 						if (square_list->center.x < image->width/2){
 							printf("Only Largest Found on left. rotate left at speed = 6\n");
 							ri_move(ri, RI_TURN_LEFT, 3);
 							ri_move(ri, RI_STOP, 10);
 							last_turn_dir = 0;
 						}
-						//if both squares are at the right side of the center line
+						
 						else if (square_list->center.x > image->width/2){
 							printf("Only Largest Found on right.  rotate right at speed = 6\n");
 							ri_move(ri, RI_TURN_RIGHT, 3);
@@ -571,7 +571,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 						ri_move(ri, RI_STOP, 10);
 						last_turn_dir = 1;
 					}
-					else if (change_dir == 0) {
+					else if (change_dir == 2) {
 						printf("You crossed the line rotating right!  Changing to rotate left!\n");
 						ri_move(ri, RI_TURN_LEFT, 3);
 						ri_move(ri, RI_STOP, 10);
