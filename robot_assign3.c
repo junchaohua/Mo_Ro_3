@@ -16,12 +16,6 @@
 #include "robot_vision.h"
 
 /* DEFINES */
-//#define WAYPOINT_COORDS {{342.9, 0.0},{243.84, 182.88},{297.18, 182.88},{406.400, 302.26},{060.96, 403.86},{0,0}}
-//#define NUMBER_OF_WAYPOINTS 6 /*6 {342.9, 0.0}*/
-//#define WAYPOINT_COORDS {{150.0,0.0},{150.0,0.0}}
-#define WAYPOINT_COORDS {{65.0,0.0}}
-#define NUMBER_OF_WAYPOINTS 1
-
 #define F_Kp 1.0
 #define F_Ki 0.1
 #define F_Kd 0.01
@@ -116,7 +110,7 @@ float calcAngle(int p1_x, int p1_y, int p2_x, int p2_y) {
 	return atan2( (float)(p2_y - p1_y), (float)(p2_x - p1_x) );
 }
 
-void rotate_to_theta(robot_if_t *ri, float target_theta){
+void rotate_to_theta(robot_if_t *ri, float target_theta, vector *final_pos){
 	float	output,
 		rot_amount;
 	int  	ang_vel;		
@@ -178,10 +172,15 @@ void rotate_to_theta(robot_if_t *ri, float target_theta){
 	
 	ri_move(ri, RI_STOP, 1);
 	
+	final_pos->v[0] = current_location->v[0];
+	final_pos->v[1] = current_location->v[1];
+	final_pos->v[2] = current_location->v[2];
+	
+	free(current_location);
 	free(expected_vel);
 }
 
-void go_to_position(robot_if_t *ri, float end_x, float end_y){
+void go_to_position(robot_if_t *ri, IplImage *image,  float end_x, float end_y, vector *final_pos){
  	float	setpoint,
 		x_i,
 		y_i,
@@ -210,7 +209,7 @@ void go_to_position(robot_if_t *ri, float end_x, float end_y){
 	theta_target = calcAngle(x_i, y_i, end_x, end_y);
 	
 	// point robot at destination using PID 
-	if( fabs(theta_target - current_location->v[2]) > 0.15) rotate_to_theta(ri, theta_target);	
+	//if( fabs(theta_target - current_location->v[2]) > 0.15) rotate_to_theta(ri, theta_target);	
 	  
 	i = 10;
 	// setpoint is the exact number of cm required to move to target.
@@ -243,8 +242,8 @@ void go_to_position(robot_if_t *ri, float end_x, float end_y){
 		
 		// move the bot based on bot_speed and define expected velocities for kalmann filter
 		if(bot_speed > 0) {
-			if 	( theta_error > 0.175 )	ri_move(ri, RI_MOVE_FWD_LEFT, bot_speed);
-			else if ( theta_error < -0.175 )	ri_move(ri, RI_MOVE_FWD_RIGHT, bot_speed);
+			if 	( theta_error > 0.175 ) ;	//ri_move(ri, RI_MOVE_FWD_LEFT, bot_speed);
+			else if ( theta_error < -0.175 ) ; //	ri_move(ri, RI_MOVE_FWD_RIGHT, bot_speed);
 			else 				ri_move(ri, RI_MOVE_FORWARD, bot_speed);
 			
 			/* expected velocities now scaled in half to compensate for network lag */
@@ -267,8 +266,19 @@ void go_to_position(robot_if_t *ri, float end_x, float end_y){
 		//refresh current position values and see if bot changed rooms.  If it does, reset scaling factor
    		get_Position(ri, current_location, expected_vel, FORWARD);
 		
+		/* show the bot moving */
+		if(ri_get_image(ri, image) == RI_RESP_SUCCESS) {
+			cvShowImage("Square Display", image);
+			cvWaitKey(10);
+		}
+		else  printf("Unable to capture an image!\n");
+		
 		printf("Kalmann filtered result = %f\t%f\t%f\n", current_location->v[0], current_location->v[1], current_location->v[2]);		
 	} while( error > FWD_PID_TOLERANCE );
+	
+	final_pos->v[0] = current_location->v[0];
+	final_pos->v[1] = current_location->v[1];
+	final_pos->v[2] = current_location->v[2];
 	
 	ri_move(ri, RI_STOP, 1);
 
@@ -277,76 +287,123 @@ void go_to_position(robot_if_t *ri, float end_x, float end_y){
 	free(expected_vel);
 }
 
-
-/* Not functional, would like to add it for awareness of battery levels */
-void battery_check( robot_if_t *ri ) {
-	if( ri_getBattery(ri) < RI_ROBOT_BATTERY_HOME ) {
-		printf("Charge me please!!!");
-		exit(11);
+/* Print out a menu of selections */
+int printmenu(){
+	int input = -1;
+	
+	printf("What would you like to do?\n");
+	printf("\t0. Quit.\n");
+	printf("\t1. Go straight ahead 1 block.\n");
+	printf("\t2. Turn right 90 degrees.\n");
+	printf("\t3. Turn left 90 degrees.\n");
+	printf("\t4. Turn around (180 degrees).\n");
+	printf("\t5. Just Center.\n");
+	
+	while(input < 0 || input > 4) {
+		printf("Please choose a command (0 - 4):\t");
+		input = getc(stdin) - '0';
+		printf("\n");
 	}
+	
+	return input;
 }
 
 /* MAIN */
-
 int main(int argv, char **argc) {
-robot_if_t ri;
-vector *loc,
-*vel;
-float target_x,
-target_y;
+	robot_if_t	ri;
+	IplImage	*image = NULL, 
+			*final_threshold = NULL;
+	vector 		*loc,
+			*vel;
+	float 		target_x,
+			target_y;	
+	int		flag = 1;
 
-float waypoints[NUMBER_OF_WAYPOINTS][2] = WAYPOINT_COORDS;//WAYPOINT_COORDS;
-int numWayPoints = NUMBER_OF_WAYPOINTS, index;
+		// Setup the robot with the address passed in
+		if(ri_setup(&ri, argc[1], 0)) printf("Failed to setup the robot!\n");
 
-        // Setup the robot with the address passed in
-        if(ri_setup(&ri, argc[1], 0)) printf("Failed to setup the robot!\n");
+	if(ri_getHeadPosition(&ri) != RI_ROBOT_HEAD_LOW ) ri_move(&ri, RI_HEAD_DOWN , 1);
 
-if(ri_getHeadPosition(&ri) != RI_ROBOT_HEAD_LOW ) ri_move(&ri, RI_HEAD_DOWN , 1);
+	// Check condition of battery, exit if not enough charge
+	//battery_check(&ri);
 
-// Check condition of battery, exit if not enough charge
-//battery_check(&ri);
+	loc = (vector *)calloc(1, sizeof(vector));
+	vel = (vector *)calloc(1, sizeof(vector));
+	
+	loc->v[0] = 0;
+	loc->v[1] = 0;
+	loc->v[2] = 0;
+	
+	vel->v[0] = 0;
+	vel->v[1] = 0;
+	vel->v[2] = 0;
 
-loc = (vector *)calloc(1, sizeof(vector));
-vel = (vector *)calloc(1, sizeof(vector));
+	// Create an image to store the image from the camera
+	image = cvCreateImage(cvSize(640, 480), IPL_DEPTH_8U, 3);
+	final_threshold = cvCreateImage(cvSize(640, 480), IPL_DEPTH_8U, 1);
 
-// Initialize PID controllers
-fwdPID = calloc(1, sizeof(PID));
-rotPID = calloc(1, sizeof(PID));
-init_PID(fwdPID, F_Kp, F_Ki, F_Kd);
-init_PID(rotPID, R_Kp, R_Ki, R_Kd);
+	// Initialize PID controllers
+	fwdPID = calloc(1, sizeof(PID));
+	rotPID = calloc(1, sizeof(PID));
+	init_PID(fwdPID, F_Kp, F_Ki, F_Kd);
+	init_PID(rotPID, R_Kp, R_Ki, R_Kd);
 
-// Retrieve initial position, initailize current and last
-init_pos(&ri);
+	// Retrieve initial position, initailize current and last
+	init_pos(&ri);
 
-//cvNamedWindow("Rovio Camera", CV_WINDOW_AUTOSIZE);
-cvNamedWindow("Square Display", CV_WINDOW_AUTOSIZE);
-cvNamedWindow("Thresholded", CV_WINDOW_AUTOSIZE);
+	//cvNamedWindow("Rovio Camera", CV_WINDOW_AUTOSIZE);
+	cvNamedWindow("Square Display", CV_WINDOW_AUTOSIZE);
+	cvNamedWindow("Thresholded", CV_WINDOW_AUTOSIZE);
 
-//waypoint nav:
-for(index = 0; index < numWayPoints; index++){
-target_x = waypoints[index][0];
-target_y = waypoints[index][1];
-go_to_position(&ri, target_x, target_y);
+	flag = printmenu();
+	
+	while(flag != 0) {
+		switch(flag) {
+			case 1:
+			{
+				go_to_position(&ri, image, loc->v[0] + 65.0, loc->v[1] + 0.0, loc);
+				break;
+			}
+			case 2:
+			{
+				break;
+			}
+			case 3:
+			{
+				break;
+			}
+			case 4:
+			{
+				break;
+			}
+			default:
+			{
+				break;
+			}			  
+		}
+		
+		get_Position(&ri, loc, vel, ROTATE);
+		
+		center_robot(&ri, image, final_threshold, argc[1]);
+		
+		get_Position(&ri, loc, vel, FORWARD);
 
-printf("\n ********************* Waypoint %d Reached ********************\n\n", (index+1));
+		flag = printmenu();
+	}
 
-center(&ri);
+	free(fwdPID);
+	free(rotPID);
+	free(loc);
+	free(vel);
 
-if(index == 4) {
-get_Position(&ri, loc, vel, FORWARD);
-rotate_to_theta(&ri, -M_PI/2.0, loc);
-}
-}
+	exit_pos();
+	
+	// Free the images
+	cvReleaseImage(&final_threshold);
+	cvReleaseImage(&image);
 
-free(fwdPID);
-free(rotPID);
-free(loc);
-free(vel);
+	cvDestroyWindow("Square Display");
+	cvDestroyWindow("Thresholded");
 
-exit_pos();
-
-cvDestroyWindow("Square Display");
-cvDestroyWindow("Thresholded");
-
-return 0;
+	return 0;
 }
