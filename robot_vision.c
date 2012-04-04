@@ -467,7 +467,8 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 			change_dir = 0,
 			last_largest_x = -1,
 			avg_area = 1600,
-			i;
+			i,
+			last_turn_dir = 0;	//0 = left, 1 = right
 	float		slope_diff = 1.0,
 			tol = 0.05;
 	squares_t 	*square_list = NULL,
@@ -515,6 +516,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 						printf("Has pair.  Diff < - 40.  rotate left at speed = 6\n");
 						ri_move(ri, RI_TURN_LEFT, 5);
 						ri_move(ri, RI_STOP, 10);
+						last_turn_dir = 0;
 					}
 					
 					//rotate to the right
@@ -522,6 +524,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 						printf("Has pair.  Diff > 40.  rotate right at speed = 6\n");
 						ri_move(ri, RI_TURN_RIGHT, 5);
 						ri_move(ri, RI_STOP, 10);
+						last_turn_dir = 1;
 					}
 					
 					break;
@@ -536,12 +539,14 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 						printf("Larger square to left of smaller.  rotate right at speed = 6\n");
 						ri_move(ri, RI_TURN_RIGHT, 3);
 						ri_move(ri, RI_STOP, 10);
+						last_turn_dir = 1;
 					}
 					//If largest is to the RIGHT of the next largest, turn left
 					else if (square_list->center.x > square_list->next->center.x){
 						printf("Larger square to right of smaller.  rotate left at speed = 6\n");
 						ri_move(ri, RI_TURN_LEFT, 3);
 						ri_move(ri, RI_STOP, 10);
+						last_turn_dir = 0;
 					}
 					break;
 				}
@@ -564,12 +569,14 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 							printf("Only Largest Found on left. rotate left at speed = 6\n");
 							ri_move(ri, RI_TURN_LEFT, 3);
 							ri_move(ri, RI_STOP, 10);
+							last_turn_dir = 0;
 						}
 						//if both squares are at the right side of the center line
 						else if (square_list->center.x > image->width/2){
 							printf("Only Largest Found on right.  rotate right at speed = 6\n");
 							ri_move(ri, RI_TURN_RIGHT, 3);
 							ri_move(ri, RI_STOP, 10);
+							last_turn_dir = 1;
 						} 
 						
 						last_largest_x = square_list->center.x;
@@ -578,11 +585,13 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 						printf("You crossed the line rotating left!  Changing to rotate right!\n");
 						ri_move(ri, RI_TURN_RIGHT, 3);
 						ri_move(ri, RI_STOP, 10);
+						last_turn_dir = 1;
 					}
 					else if (change_dir == 0) {
 						printf("You crossed the line rotating right!  Changing to rotate left!\n");
 						ri_move(ri, RI_TURN_LEFT, 3);
 						ri_move(ri, RI_STOP, 10);
+						last_turn_dir = 0;
 					}
 					else printf("You should never make it to this else statement!\n");
 					
@@ -592,6 +601,18 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 				/* none found, possibly return a value to indicate as much */
 				default:
 				{ 
+					if (last_turn_dir == 0){
+						printf("No squares found!  Changing to rotate right!\n");
+						ri_move(ri, RI_TURN_RIGHT, 3);
+						ri_move(ri, RI_STOP, 10);
+						last_turn_dir = 1;
+					}
+					else if (last_turn_dir == 1){
+						printf("No squares found!  Changing to rotate left!\n");
+						ri_move(ri, RI_TURN_LEFT, 3);
+						ri_move(ri, RI_STOP, 10);
+						last_turn_dir = 0;
+					}
 					break;
 				}
 			}
@@ -609,6 +630,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 				printf("Pointing right of middle.  strafe left at speed = 2\n");
 				ri_move(ri, RI_MOVE_LEFT, 2);
 				ri_move(ri, RI_STOP, 10);
+				last_turn_dir = 0;
 			}
 			
 			//strafe to the right
@@ -616,6 +638,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 				printf("Pointing left of middle.  strafe right at speed = 2\n");
 				ri_move(ri, RI_MOVE_RIGHT, 2);
 				ri_move(ri, RI_STOP, 10);
+				last_turn_dir = 1;
 			}
 			
 			//find the squares list
