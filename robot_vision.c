@@ -461,12 +461,10 @@ square_state get_squares(robot_if_t *ri, squares_t *square_list, IplImage *image
 //try to center the robot
 void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, char *bot_name){
 	int 		x_dist_diff,
-			avg_pair_area,
-			area_diff,
 			intersect_x = 0,
 			change_dir = 0,
 			last_largest_x = -1,
-			avg_area = 1600,
+			avg_area,
 			i;
 	float		slope_diff = 1.0,
 			tol = 0.05;
@@ -630,15 +628,30 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 		}
 		
 	// moveTo:
-		while(avg_area < 1597 && avg_area > 1689) {
+	        avg_area = get_pair_average_area(square_list, square_list->next);
+		printf("Average area = %d\n", avg_area);
+		
+		while(avg_area < 1478 || avg_area > 1622) {  // 1550 +- 72
 			printf("In moveTo State!\n");
-			avg_pair_area = get_pair_average_area(square_list, square_list->next);
-			area_diff = get_diff_in_area(square_list, square_list->next);
-			printf("weight average area = %d\t difference in area = %d\n", avg_pair_area, area_diff);
-		  
+			
+			if(avg_area < 1478) {
+				printf("Too far back.  Moving forwards.\n");
+				ri_move(ri, RI_MOVE_FORWARD, 10);
+				//ri_move(ri, RI_STOP, 10);
+			}
+			else if(avg_area > 1622) {
+				printf("Too far forward.  Moving backwards.\n");
+				ri_move(ri, RI_MOVE_BACKWARD, 10);
+				//ri_move(ri, RI_STOP, 10);
+			}
+			
+			
+			avg_area = get_pair_average_area(square_list, square_list->next);
+			
 			//find the squares list
 			state = get_squares(ri, square_list, image, final_threshold, &slope_diff, bot_name);
-		  
+			
+			if (state != hasTwoPair) goto pointTo;
 		}
 	
 	// Release the square list data
