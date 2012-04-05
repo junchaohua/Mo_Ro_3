@@ -317,8 +317,6 @@ int main(int argv, char **argc) {
 			*final_threshold = NULL;
 	vector 		*loc,
 			*vel;
-	float 		target_x,
-			target_y;	
 	int		flag = 1;
 
 	// Make sure we have a valid command line argument
@@ -397,11 +395,11 @@ int main(int argv, char **argc) {
 			}			  
 		}
 		
-		get_Position(&ri, loc, vel, ROTATE);
+		update_pos(&ri);
 		
 		center_robot(&ri, image, final_threshold, argc[1]);
 		
-		get_Position(&ri, loc, vel, FORWARD);
+		update_pos(&ri);
 
 		flag = printmenu();
 	}

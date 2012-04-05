@@ -328,7 +328,7 @@ square_state get_squares(robot_if_t *ri, squares_t *square_list, IplImage *image
 	cvOr(threshold_1, threshold_2, final_threshold, NULL);
 	
 	/* show final thresholded image for testing */
-	cvShowImage("Thresholded", final_threshold);
+	//cvShowImage("Thresholded", final_threshold);
 	// Find the squares in the image
 	squares = ri_find_squares(final_threshold, RI_DEFAULT_SQUARE_SIZE);
 	
@@ -346,7 +346,7 @@ square_state get_squares(robot_if_t *ri, squares_t *square_list, IplImage *image
 		while(sq_idx != NULL){
 			if(sq_idx->next == NULL) break;
 			
-			else if(isPair(sq_idx, sq_idx->next, area_threshold)){
+			else if(isPair(sq_idx, sq_idx->next, AREA_THRESHOLD)){
 				if (s == noneFound ){
 					printf("Got One Pair!\n");
 					copy_square(square_list,sq_idx);
@@ -431,6 +431,7 @@ square_state get_squares(robot_if_t *ri, squares_t *square_list, IplImage *image
 	draw_vertical_line(image);
 		
 	// Display the image with the drawing oon ito
+	cvShowImage("Thresholded", final_threshold);
 	cvShowImage("Square Display", image);
 		
 	// Update the UI (10ms wait)
@@ -609,11 +610,14 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 		
 	// strafeTo:
 		while(slope_diff > tol || slope_diff < -tol) {
-			printf("In strafeTo State!\n");
+		  	printf("In strafeTo State!\n");
+			i++;
+			
 			//strafe to the left
 			if (slope_diff  < 0){
 				printf("Pointing right of middle.  strafe left at speed = 2\n");
-				ri_move(ri, RI_MOVE_LEFT, 2);
+				if( i < 3 )     ri_move(ri, RI_MOVE_LEFT, 1);
+				else 		ri_move(ri, RI_MOVE_LEFT, 2);
 				ri_move(ri, RI_STOP, 10);
 				last_turn_dir = 0;
 			}
@@ -621,7 +625,8 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 			//strafe to the right
 			else if (slope_diff  > 0){
 				printf("Pointing left of middle.  strafe right at speed = 2\n");
-				ri_move(ri, RI_MOVE_RIGHT, 2);
+				if( i < 3 ) 	ri_move(ri, RI_MOVE_RIGHT, 1);
+				else		ri_move(ri, RI_MOVE_RIGHT, 2);
 				ri_move(ri, RI_STOP, 10);
 				last_turn_dir = 1;
 			}
