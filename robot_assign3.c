@@ -404,7 +404,7 @@ int main(int argv, char **argc) {
 		
 		update_pos(&ri);
 		
-		//flag = printmenu();
+		flag = printmenu();
 	}
 
 	free(fwdPID);

@@ -492,7 +492,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 	 */
 	i = 0;  /* now going to use i to count the times we strafe */
 	
-	/*pointTo:
+	pointTo:
 		while (state != hasTwoPair){
 			//)getc(stdin;
 			printf("In pointTo State!\n");
@@ -612,7 +612,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 			}
 			
 			//find the squares list
-			state = get_squares(ri, square_list, image, final_threshold, &slope_diff, bot_name);
+			state = get_squares(ri, square_list, image, final_threshold, &slope_diff, bot_name,robot_dir);
 			intersect_x = 0;	
 		}
 		
@@ -640,7 +640,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 			}
 			
 			//find the squares list
-			state = get_squares(ri, square_list, image, final_threshold, &slope_diff, bot_name);
+			state = get_squares(ri, square_list, image, final_threshold, &slope_diff, bot_name,robot_dir);
 		
 			if (state != hasTwoPair) goto pointTo;
 		}
@@ -668,7 +668,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 			avg_area = get_pair_average_area(square_list, square_list->next);
 			
 			//find the squares list
-			state = get_squares(ri, square_list, image, final_threshold, &slope_diff, bot_name);
+			state = get_squares(ri, square_list, image, final_threshold, &slope_diff, bot_name,robot_dir);
 			
 			if (state != hasTwoPair) goto pointTo;
 		}
@@ -681,7 +681,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 	}
 	
 	// put head down for future movement 
-	ri_move(ri, RI_HEAD_DOWN, RI_FASTEST);*/
+	ri_move(ri, RI_HEAD_DOWN, RI_FASTEST);
 }
 
 /*
