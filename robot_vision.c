@@ -346,7 +346,7 @@ square_state get_squares(robot_if_t *ri, squares_t *square_list, IplImage *image
 		/* sort squares from largest to smallest */
 		sort_squares(squares);
 		
-		printAreas(squares);
+		//printAreas(squares);
 		
 		//find largest useful pair (if they exist)
 		sq_idx = squares;
@@ -469,9 +469,8 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 	square_state state = noneFound;
 	
 	// Move the head up to the middle position
-	ri_move(ri, RI_HEAD_MIDDLE, RI_FASTEST);
-	ri_move(ri, RI_HEAD_MIDDLE, RI_FASTEST);
-	
+	for(i = 0; i < 10; i++) ri_move(ri, RI_HEAD_MIDDLE, RI_FASTEST);
+		
 	/* Initialize square_list to hold up to four squares */
 	square_list = malloc(sizeof(squares_t));
 	sq_idx = square_list;
@@ -644,11 +643,6 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 			state = get_squares(ri, square_list, image, final_threshold, &slope_diff, bot_name);
 		
 			if (state != hasTwoPair) goto pointTo;
-			
-			// if two pairs are found, find the intersection point
-			slope_diff = draw_intersect_line(square_list, square_list->next, 
-							  square_list->next->next, square_list->next->next->next, 
-							  image, 0, 160, 255);
 		}
 		
 	// moveTo:
