@@ -60,7 +60,7 @@ float get_we_X(we_stance *s) {
 	// compute the weighted average of X for the left and right wheels
 	avg = (float)s->right_delta * sin(60.0 / 180.0 * M_PI);
 	avg += (float)s->left_delta * sin(120.0 / 180.0 * M_PI);
-	avg /= 2.0;
+	avg /= 1.0;
 	avg /= WE_TICKS_PER_CM;
 	
 	return avg;
@@ -73,7 +73,7 @@ float get_we_Y(we_stance *s) {
 	// compute the weighted average of Y for the left and right wheels
 	avg = (float)s->right_delta * cos(60.0 / 180.0 * M_PI);
 	avg += (float)s->left_delta * cos(120.0 / 180.0 * M_PI);
-	avg /= 2.0;
+	avg /= 1.0;
 	
 	avg /= (WE_TICKS_PER_CM * 4.0);
 	
@@ -158,13 +158,13 @@ void get_turning_theta(we_stance *s, vector *ws) {
 	// make avg_theta conform to our coordinate system
 	avg_theta *= -1.0;
   
-	//set ws vector values 
+	// return the position of the bot when turn started with avg theta added onto original theta value
 	ws->v[0] = we_shift_vector->v[0];
 	ws->v[1] = we_shift_vector->v[1];
 	ws->v[2] = we_shift_vector->v[2] + avg_theta;
 }
 
-// update the shift and rotation vectors for wheel encoders from waypoint
+// update the shift and rotation vectors for wheel encoders from end of turn
 void finish_turn(robot_if_t *ri, vector *v) {
 	we_rot_matrix->v[0][0] = cos(v->v[2]);
 	we_rot_matrix->v[0][1] = -1.0 * sin(v->v[2]);
@@ -177,6 +177,7 @@ void finish_turn(robot_if_t *ri, vector *v) {
 	we_shift_vector->v[1] = v->v[1];
 	we_shift_vector->v[2] = v->v[2];
 	
+	/* reset wheel encoder totals */
 	ri_reset_state(ri);
 }
 

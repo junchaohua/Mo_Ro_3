@@ -189,7 +189,7 @@ void update_pos(robot_if_t *ri){
 	// Flush filters
 	filter_flush(ri);
 	
-	setup_NS_transforms(current->ns_f);
+	//setup_NS_transforms(current->ns_f);
 	setup_WE_transforms(current->kalmanFiltered);
 	
 	/* reset room switch if it was used */
@@ -206,13 +206,16 @@ void room_change(robot_if_t *ri){
 	// update current with new filter data
 	get_stance(current, ri);
 	
-	printf("\n\n---------------------Room change-------------------\n\n");
+	// report room change
+	printf("\n\n---------------------ROOM CHANGE-------------------\n\n");
 	printf("current room = %d, previous room = %d\n ", current->ns->room, previous->ns->room);
 	printf("previous room position: %d, %d, %f, %d\n ", previous->ns_f->x, previous->ns_f->y, previous->ns_f->theta, previous->ns_f->sig);
 	printf("current room : %d, %d, %f, %d\n", current->ns_f->x, current->ns_f->y, current->ns_f->theta, current->ns_f->sig);
 		
-	setup_NS_transforms(current->ns_f);//use untranslated, filtered ns stance
+	// update NS shift and rotate to new room characteristics
+	setup_NS_transforms(current->ns_f);
 	
+	// store the vector produced by Northstar prior to room shift so that we can add onto it in the new room
 	room_switch->v[0] = previous->nsTranslated->v[0];
 	room_switch->v[1] = previous->nsTranslated->v[1];
 	room_switch->v[2] = previous->nsTranslated->v[2];
@@ -226,6 +229,7 @@ int get_Position(robot_if_t *ri, vector *loc, vector *vel, int m_t){
 	// copy current stance into previous
 	copy_stance(current, previous);
 	
+	// get new sensor data and put it in position structure
 	update_sensor_data(ri);
 	get_stance(current, ri);
 	
@@ -254,17 +258,20 @@ int get_Position(robot_if_t *ri, vector *loc, vector *vel, int m_t){
 	print_ns(current->ns_f);
 	printf("\n");
 	
-	/* transform northstar */
-	transform_NS(current->ns_f, current->nsTranslated);
-	
-	/* transform wheel encoders based on move type */
-	if(m_t == ROTATE) get_turning_theta(current->we, current->weTranslated);
-	else transform_WE(current->we, current->weTranslated);
+	/* transform northstar and wheel encoders based on move type */
+	if(m_t == ROTATE) {
+		get_turning_theta(current->we, current->weTranslated);
+		transform_NS(current->ns, current->nsTranslated);
+	}
+	else {
+		transform_WE(current->we, current->weTranslated);
+		transform_NS(current->ns_f, current->nsTranslated);
+	}
 
-	// Shift nsTranslated with room switch vector and last kalman
-	current->nsTranslated->v[0] += room_switch->v[0] + last->kalmanFiltered->v[0];
-	current->nsTranslated->v[1] += room_switch->v[1] + last->kalmanFiltered->v[1];
-	current->nsTranslated->v[2] += room_switch->v[2] + last->kalmanFiltered->v[2];
+	// Shift nsTranslated with room switch vector
+	current->nsTranslated->v[0] += room_switch->v[0];// + last->kalmanFiltered->v[0];
+	current->nsTranslated->v[1] += room_switch->v[1];// + last->kalmanFiltered->v[1];
+	current->nsTranslated->v[2] += room_switch->v[2];// + last->kalmanFiltered->v[2];
 	
 	// Shift weTranslated with last kalman
 	current->weTranslated->v[0] += last->kalmanFiltered->v[0];
@@ -279,15 +286,11 @@ int get_Position(robot_if_t *ri, vector *loc, vector *vel, int m_t){
 	printf("WE Translation Result = ");
 	PrintVector(current->weTranslated);
 
-	//  Old average of both transforms
-	/*loc_wo_kalman[0] = ( current->nsTranslated->v[0] + current->weTranslated->v[0] ) / 2.0;
-	loc_wo_kalman[1] = ( current->nsTranslated->v[1] + current->weTranslated->v[1] ) / 2.0;
-	loc_wo_kalman[2] = current->nsTranslated->v[2];
-	printf("Location without Kalmann results = %f\t%f\t%f\n", loc_wo_kalman[0],loc_wo_kalman[1],loc_wo_kalman[2]);
-	*/
-	//get kalman filtered data
+	//set kalman velocity and get kalman filtered data
 	rovioKalmanFilterSetVelocity(kfilter, vel->v); 
 	get_kalman_filter_data(current->kalmanFiltered);
+	
+	printf("Kalmann Filter Result = ", current->kalmanFiltered);
 	
 	// Report kalman filtered values
 	loc->v[0] = current->kalmanFiltered->v[0];

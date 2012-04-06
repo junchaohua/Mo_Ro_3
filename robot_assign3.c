@@ -165,8 +165,6 @@ void rotate_to_theta(robot_if_t *ri, float target_theta, vector *final_pos){
 				 
 		get_Position(ri, current_location, expected_vel, ROTATE);
 		
-		printf("Kalmann filtered result = %f\t%f\t%f\n\n", current_location->v[0], current_location->v[1], current_location->v[2]);
-		
 		rot_amount = fabs(target_theta - current_location->v[2]);		
 	} while (rot_amount > 0.15);
 	
@@ -274,8 +272,6 @@ void go_to_position(robot_if_t *ri, IplImage *image,  float end_x, float end_y, 
 			cvWaitKey(10);
 		}
 		else  printf("Unable to capture an image!\n");
-		
-		printf("Kalmann filtered result = %f\t%f\t%f\n", current_location->v[0], current_location->v[1], current_location->v[2]);		
 	} while( error > FWD_PID_TOLERANCE );
 	
 	final_pos->v[0] = current_location->v[0];
