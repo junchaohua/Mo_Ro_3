@@ -240,11 +240,13 @@ void go_to_position(robot_if_t *ri, IplImage *image,  float end_x, float end_y, 
 			  bot_speed = fwdSpeedScaling(output);
 		}
 		
+		printf("Go To Bot speed = %d\n", bot_speed);
+		
 		// move the bot based on bot_speed and define expected velocities for kalmann filter
 		if(bot_speed > 0) {
-			if 	( theta_error > 0.175 ) ;	//ri_move(ri, RI_MOVE_FWD_LEFT, bot_speed);
-			else if ( theta_error < -0.175 ) ; //	ri_move(ri, RI_MOVE_FWD_RIGHT, bot_speed);
-			else 				ri_move(ri, RI_MOVE_FORWARD, bot_speed);
+			//if 	( theta_error > 0.175 ) ;	//ri_move(ri, RI_MOVE_FWD_LEFT, bot_speed);
+			//else if ( theta_error < -0.175 ) ; //	ri_move(ri, RI_MOVE_FWD_RIGHT, bot_speed);
+			ri_move(ri, RI_MOVE_FORWARD, bot_speed);//else 				
 			
 			/* expected velocities now scaled in half to compensate for network lag */
 			expected_vel->v[0] = fwd_speed[bot_speed - 1] * cos(current_location->v[2]) * 0.5;
@@ -315,17 +317,27 @@ int main(int argv, char **argc) {
 			*final_threshold = NULL;
 	vector 		*loc,
 			*vel;
-	float 		target_x,
-			target_y;	
 	int		flag = 1;
 
-		// Setup the robot with the address passed in
-		if(ri_setup(&ri, argc[1], 0)) printf("Failed to setup the robot!\n");
+	// Make sure we have a valid command line argument
+	if(argv <= 1) {
+		printf("Usage: robot_test <address of robot>\n");	
+		exit(-1);
+	}
 
-	if(ri_getHeadPosition(&ri) != RI_ROBOT_HEAD_LOW ) ri_move(&ri, RI_HEAD_DOWN , 1);
+	// Setup the robot with the address passed in
+	if(ri_setup(&ri, argc[1], 0)) {
+		printf("Failed to setup the robot!\n");
+		exit(-1);
+	}
 
-	// Check condition of battery, exit if not enough charge
-	//battery_check(&ri);
+	// Setup the camera
+	if(ri_cfg_camera(&ri, RI_CAMERA_DEFAULT_BRIGHTNESS, RI_CAMERA_DEFAULT_CONTRAST, 5, RI_CAMERA_RES_640, RI_CAMERA_QUALITY_HIGH)) {
+		printf("Failed to configure the camera!\n");
+		exit(-1);
+	}
+	
+	if(ri_getHeadPosition(&ri) != RI_ROBOT_HEAD_LOW ) ri_move(&ri, RI_HEAD_DOWN , 1);	
 
 	loc = (vector *)calloc(1, sizeof(vector));
 	vel = (vector *)calloc(1, sizeof(vector));
@@ -361,6 +373,7 @@ int main(int argv, char **argc) {
 		switch(flag) {
 			case 1:
 			{
+				printf("Going ahead 65cm!\n\n");
 				go_to_position(&ri, image, loc->v[0] + 65.0, loc->v[1] + 0.0, loc);
 				break;
 			}
@@ -376,18 +389,20 @@ int main(int argv, char **argc) {
 			{
 				break;
 			}
+			case 5:
+			{
+				printf("Centering!\n\n");
+				center_robot(&ri, image, final_threshold, argc[1]);
+				break;
+			}
 			default:
 			{
 				break;
 			}			  
 		}
 		
-		get_Position(&ri, loc, vel, ROTATE);
+		update_pos(&ri);
 		
-		center_robot(&ri, image, final_threshold, argc[1]);
-		
-		get_Position(&ri, loc, vel, FORWARD);
-
 		flag = printmenu();
 	}
 

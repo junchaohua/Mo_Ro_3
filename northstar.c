@@ -12,7 +12,7 @@ matrix *ns_rot_matrix;
 matrix *scale_matrix;
 
 float theta_cor[] = {
-	-0.25, /*ROOM TWO THETA COR*/
+	-0.060368, /*ROOM TWO THETA COR*/
 	-1.556130, /*ROOM THREE THETA COR*/
 	-0.020485, /*ROOM FOUR THETA COR*/
 	-1.502438  /*ROOM FIVE THETA COR*/

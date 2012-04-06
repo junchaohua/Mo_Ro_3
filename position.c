@@ -77,6 +77,7 @@ void filter_flush(robot_if_t *ri) {
 		update_sensor_data(ri);
 	}
 }
+
 //get fir filtered data 
 void get_filtered(robot_stance *s, robot_if_t *ri){
 	s->ns_f->x		= (int)fir_Filter(f[0], (float)s->ns->x);
@@ -106,7 +107,7 @@ robot_stance *create_stance(){
 	return rs;
 }
 
-// populate stance with RAW northstar and wheel encoder data
+// populate stance with RAW northstar and wheel encoder data, and filtered data
 void get_stance(robot_stance *s, robot_if_t *ri) {
 	get_ns(s->ns, ri);
 	get_we(s->we, ri);
@@ -126,11 +127,10 @@ void get_kalman_filter_data(vector *kf_data){
 	//printf("Kalmann filtered result = %f\t%f\t%f\n", track[0],track[1],track[2]);	
 }
 
+// Initialize the positioning so transforms are set up properly 
 void init_pos(robot_if_t *ri){
 	int i;
-	//float vel[3] = { 350.0/54.0, 0, 0 };
-	float vel[3] = {35, 0, 0 };
-	//float vel[3] = {0, 0, 10 };
+	float vel[3] = {0, 0, 0};
 	float pos[3] = {0, 0, 0};
 	int deltaT = 1;
 	
@@ -158,7 +158,7 @@ void init_pos(robot_if_t *ri){
 	
 	// Setup Northstar and Wheel Encoder Transform matrices based on intial position
 	setup_NS_transforms(initial->ns_f);
-	setup_WE_transforms(initial->weTranslated);
+	setup_WE_transforms(initial->weTranslated);  // weTranslated is set to zero during create_stance
 	
 	//printf("Initial Kalman Theta = %f \n", initial->kalmanFiltered->v[2]);
 	
@@ -220,8 +220,9 @@ void room_change(robot_if_t *ri){
 
 // get the robot's current position in the room
 int get_Position(robot_if_t *ri, vector *loc, vector *vel, int m_t){
-	static int lastmove;
-	int room_changed = 0;
+	static int 	lastmove;
+	int 		room_changed = 0;
+	
 	// copy current stance into previous
 	copy_stance(current, previous);
 	
@@ -233,6 +234,7 @@ int get_Position(robot_if_t *ri, vector *loc, vector *vel, int m_t){
 	  room_change(ri);
 	  room_changed = 1;
 	}
+	
 	/* check to see if move type is changing from forward to rotate
 	 * to prepare Wheel Encoders to Rotate */
 	if( lastmove == FORWARD && m_t == ROTATE ) {
@@ -252,8 +254,10 @@ int get_Position(robot_if_t *ri, vector *loc, vector *vel, int m_t){
 	print_ns(current->ns_f);
 	printf("\n");
 	
-	
+	/* transform northstar */
 	transform_NS(current->ns_f, current->nsTranslated);
+	
+	/* transform wheel encoders based on move type */
 	if(m_t == ROTATE) get_turning_theta(current->we, current->weTranslated);
 	else transform_WE(current->we, current->weTranslated);
 
