@@ -80,7 +80,6 @@ float get_we_Y(we_stance *s) {
 	return avg;
 }
 
-// Using difference between front wheel encoders to track the deviation from straight-ish theta for use in "go to" portion
 float get_we_Theta(we_stance *s) {
 	float 	theta;	
 	

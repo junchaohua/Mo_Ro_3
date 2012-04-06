@@ -373,7 +373,7 @@ int main(int argv, char **argc) {
 		switch(flag) {
 			case 1:
 			{
-				printf("Going ahead 65cm!");
+				printf("Going ahead 65cm!\n\n");
 				go_to_position(&ri, image, loc->v[0] + 65.0, loc->v[1] + 0.0, loc);
 				break;
 			}
@@ -389,6 +389,12 @@ int main(int argv, char **argc) {
 			{
 				break;
 			}
+			case 5:
+			{
+				printf("Centering!\n\n");
+				center_robot(&ri, image, final_threshold, argc[1]);
+				break;
+			}
 			default:
 			{
 				break;
@@ -397,10 +403,6 @@ int main(int argv, char **argc) {
 		
 		update_pos(&ri);
 		
-		center_robot(&ri, image, final_threshold, argc[1]);
-		
-		update_pos(&ri);
-
 		flag = printmenu();
 	}
 
