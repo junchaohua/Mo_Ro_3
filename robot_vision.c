@@ -274,7 +274,7 @@ void printAreas(squares_t *squares) {
 }
 
 /* Find squres in the thresholded image, sort the list returned, and identify best state in list */
-square_state get_squares(robot_if_t *ri, squares_t *square_list, IplImage *image, IplImage *final_threshold, float *slope_diff, char *bot_name) {
+square_state get_squares(robot_if_t *ri, squares_t *square_list, IplImage *image, IplImage *final_threshold, float *slope_diff, char *bot_name, int robot_dir) {
 	IplImage	*hsv = NULL, 
 			*threshold_1 = NULL, 
 			*threshold_2 = NULL;
@@ -317,11 +317,20 @@ square_state get_squares(robot_if_t *ri, squares_t *square_list, IplImage *image
 		cvInRangeS(hsv, RC_PINK_LOW_2_gort, RC_PINK_HIGH_2_gort, threshold_2);
 	}
 	else{
-		// Pick out the first range of pink color from the image
-		cvInRangeS(hsv, RC_PINK_LOW_1_bender, RC_PINK_HIGH_1_bender, threshold_1);
-		
-		// Pick out the second range of pink color from the image
-		cvInRangeS(hsv, RC_PINK_LOW_2_bender, RC_PINK_HIGH_2_bender, threshold_2);
+		if (robot_dir == 0){
+			// Pick out the first range of pink color from the image
+			cvInRangeS(hsv, RC_PINK_LOW_1_bender, RC_PINK_HIGH_1_bender, threshold_1);
+			
+			// Pick out the second range of pink color from the image
+			cvInRangeS(hsv, RC_PINK_LOW_2_bender, RC_PINK_HIGH_2_bender, threshold_2);
+		}
+		else{
+			// Pick out the first range of pink color from the image
+			cvInRangeS(hsv, RC_PINK_LOW_1_bender2, RC_PINK_HIGH_1_bender2, threshold_1);
+			
+			// Pick out the second range of pink color from the image
+			cvInRangeS(hsv, RC_PINK_LOW_2_bender2, RC_PINK_HIGH_2_bender2, threshold_2);
+		}
 	}
 	
 	// compute the final threshold image by using cvOr
@@ -445,7 +454,7 @@ square_state get_squares(robot_if_t *ri, squares_t *square_list, IplImage *image
 }
 
 //try to center the robot
-void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, char *bot_name){
+void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, char *bot_name, int robot_dir){
 	int 		x_dist_diff,
 			intersect_x = 0,
 			change_dir = 0,
@@ -474,7 +483,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 	}
 	
 	//find the squares list
-	state = get_squares(ri, square_list, image, final_threshold, &slope_diff, bot_name);
+	state = get_squares(ri, square_list, image, final_threshold, &slope_diff, bot_name, robot_dir);
 		
 	/* State machine
 	 * 1. pointTo:  Point to Center (find pairs)
@@ -484,7 +493,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 	 */
 	i = 0;  /* now going to use i to count the times we strafe */
 	
-	pointTo:
+	/*pointTo:
 		while (state != hasTwoPair){
 			//)getc(stdin;
 			printf("In pointTo State!\n");
@@ -678,7 +687,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 	}
 	
 	// put head down for future movement 
-	ri_move(ri, RI_HEAD_DOWN, RI_FASTEST);
+	ri_move(ri, RI_HEAD_DOWN, RI_FASTEST);*/
 }
 
 /*

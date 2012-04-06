@@ -18,10 +18,7 @@ typedef enum _square_state_ {
 	noneFound
 } square_state;
 
-<<<<<<< HEAD
-=======
 
->>>>>>> ed58e4ce1c5af96d2b6e5ae5ed9e52ff1f2e19bc
-void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, char *bot_name);
+void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, char *bot_name, int robot_dir);
 
 #endif

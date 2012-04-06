@@ -320,14 +320,19 @@ int main(int argv, char **argc) {
 	int		flag = 1;
 
 	// Make sure we have a valid command line argument
-	if(argv <= 1) {
-		printf("Usage: robot_test <address of robot>\n");	
+	if(argv <= 2) {
+		printf("Usage: robot_test <address of robot>, argc[2]: 0 = right to left, 1 = left to right\n");	
 		exit(-1);
 	}
 
 	// Setup the robot with the address passed in
 	if(ri_setup(&ri, argc[1], 0)) {
 		printf("Failed to setup the robot!\n");
+		exit(-1);
+	}
+	
+	if(atoi(argc[2]) != 0 && atoi(argc[2]) != 1){
+		printf("argc[2]: 0 = right to left, 1 = left to right\n");	
 		exit(-1);
 	}
 
@@ -392,7 +397,7 @@ int main(int argv, char **argc) {
 			case 5:
 			{
 				printf("Centering!\n\n");
-				center_robot(&ri, image, final_threshold, argc[1]);
+				center_robot(&ri, image, final_threshold, argc[1],atoi(argc[2]));
 				break;
 			}
 			default:
@@ -403,7 +408,7 @@ int main(int argv, char **argc) {
 		
 		update_pos(&ri);
 		
-		flag = printmenu();
+		//flag = printmenu();
 	}
 
 	free(fwdPID);
