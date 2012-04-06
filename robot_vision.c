@@ -316,6 +316,13 @@ square_state get_squares(robot_if_t *ri, squares_t *square_list, IplImage *image
 		// Pick out the second range of pink color from the image
 		cvInRangeS(hsv, RC_PINK_LOW_2_gort, RC_PINK_HIGH_2_gort, threshold_2);
 	}
+	else if (strcmp(bot_name, "optimus") == 0){
+		// Pick out the first range of pink color from the image
+		cvInRangeS(hsv, RC_PINK_LOW_1_optimus, RC_PINK_HIGH_1_optimus, threshold_1);
+		
+		// Pick out the second range of pink color from the image
+		cvInRangeS(hsv, RC_PINK_LOW_2_optimus, RC_PINK_HIGH_2_optimus, threshold_2);
+	}
 	else{
 		// Pick out the first range of pink color from the image
 		cvInRangeS(hsv, RC_PINK_LOW_1_bender, RC_PINK_HIGH_1_bender, threshold_1);
@@ -604,7 +611,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 			
 			//find the squares list
 			state = get_squares(ri, square_list, image, final_threshold, &slope_diff, bot_name);
-			intersect_x = 0;			
+			intersect_x = 0;	
 		}
 		
 	// strafeTo:
@@ -647,7 +654,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 			
 			if(avg_area < 1478) {
 				printf("Too far back.  Moving forwards.\n");
-				ri_move(ri, RI_MOVE_FORWARD, 2);
+				ri_move(ri, RI_MOVE_FORWARD, 1);
 				ri_move(ri, RI_STOP, 10);
 			}
 			else if(avg_area > 1622) {
