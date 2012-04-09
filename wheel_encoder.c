@@ -60,7 +60,7 @@ float get_we_X(we_stance *s) {
 	// compute the weighted average of X for the left and right wheels
 	avg = (float)s->right_delta * sin(60.0 / 180.0 * M_PI);
 	avg += (float)s->left_delta * sin(120.0 / 180.0 * M_PI);
-	avg /= 1.0;
+	avg /= 2.0;
 	avg /= WE_TICKS_PER_CM;
 	
 	return avg;
@@ -73,7 +73,7 @@ float get_we_Y(we_stance *s) {
 	// compute the weighted average of Y for the left and right wheels
 	avg = (float)s->right_delta * cos(60.0 / 180.0 * M_PI);
 	avg += (float)s->left_delta * cos(120.0 / 180.0 * M_PI);
-	avg /= 1.0;
+	avg /= 2.0;
 	
 	avg /= (WE_TICKS_PER_CM * 4.0);
 	
@@ -153,7 +153,7 @@ void get_turning_theta(we_stance *s, vector *ws) {
 	
 	// for right rotation, left WE increases, right WE decreases, back WE increases;  opposite for left rotation
 	// following formula properly sums thetas */
-	avg_theta = 0.3 * l_theta - 0.3 * r_theta + 0.4 * b_theta;
+	avg_theta = 0.25 * l_theta - 0.25 * r_theta + 0.5 * b_theta;
 	
 	// make avg_theta conform to our coordinate system
 	avg_theta *= -1.0;
