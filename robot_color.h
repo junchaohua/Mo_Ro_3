@@ -14,10 +14,10 @@
 #define RC_PINK_LOW_2_bender	cvScalar(150, 60, 120, 0)	//bender right to left
 #define RC_PINK_HIGH_2_bender	cvScalar(190, 255, 255, 0)
 
-#define RC_PINK_LOW_1_bender2	cvScalar(0, 60, 100, 0)		//bender left to right
-#define RC_PINK_HIGH_1_bender2 	cvScalar(11, 255, 255, 0)
+#define RC_PINK_LOW_1_bender2	cvScalar(0, 60, 75, 0)		//bender left to right
+#define RC_PINK_HIGH_1_bender2 	cvScalar(12, 255, 255, 0)
 
-#define RC_PINK_LOW_2_bender2	cvScalar(150, 60, 100, 0)	//bender left to right
+#define RC_PINK_LOW_2_bender2	cvScalar(150, 60, 75, 0)	//bender left to right
 #define RC_PINK_HIGH_2_bender2	cvScalar(190, 255, 255, 0)
 
 /* Pink */
