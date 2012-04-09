@@ -461,6 +461,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 			last_largest_x = -1,
 			avg_area,
 			last_turn_dir = 0,  //0 = left, 1 = right
+			single_pair_count = 0, //strafe every 10
 			i;
 	float		slope_diff = 1.0,
 			tol = 0.05;
@@ -506,18 +507,36 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 					
 					//rotate to the left
 					if (x_dist_diff < 0){
-						printf("Has pair.  Diff < - 40.  rotate left at speed = 6\n");
+						printf("Has pair.  Diff < - 40.  rotate left at speed = 5\n");
 						ri_move(ri, RI_TURN_LEFT, 5);
 						ri_move(ri, RI_STOP, 10);
 						last_turn_dir = 0;
+						single_pair_count++;
+						
+						//strafe left every 10 rotates when single pair was found
+						if (single_pair_count == 10){
+							single_pair_count = 0;
+							printf("Has pair.  Diff < - 40.  strafe left at speed = 3\n");
+							ri_move(ri, RI_MOVE_LEFT, 3);
+							ri_move(ri, RI_STOP, 10);
+						}
 					}
 					
 					//rotate to the right
 					else if (x_dist_diff > 0){
-						printf("Has pair.  Diff > 40.  rotate right at speed = 6\n");
+						printf("Has pair.  Diff > 40.  rotate right at speed = 5\n");
 						ri_move(ri, RI_TURN_RIGHT, 5);
 						ri_move(ri, RI_STOP, 10);
 						last_turn_dir = 1;
+						single_pair_count++;
+						
+						//strafe left every 10 rotates when single pair was found
+						if (single_pair_count == 10){
+							single_pair_count = 0;
+							printf("Has pair.  Diff <  40.  strafe left at speed = 3\n");
+							ri_move(ri, RI_MOVE_RIGHT, 3);
+							ri_move(ri, RI_STOP, 10);
+						}
 					}
 					
 					break;
