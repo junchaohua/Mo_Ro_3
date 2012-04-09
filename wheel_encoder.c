@@ -60,7 +60,7 @@ float get_we_X(we_stance *s) {
 	// compute the weighted average of X for the left and right wheels
 	avg = (float)s->right_delta * sin(60.0 / 180.0 * M_PI);
 	avg += (float)s->left_delta * sin(120.0 / 180.0 * M_PI);
-	avg /= 2.0;
+	avg /= AVG_DIVISOR;
 	avg /= WE_TICKS_PER_CM;
 	
 	return avg;
@@ -73,7 +73,7 @@ float get_we_Y(we_stance *s) {
 	// compute the weighted average of Y for the left and right wheels
 	avg = (float)s->right_delta * cos(60.0 / 180.0 * M_PI);
 	avg += (float)s->left_delta * cos(120.0 / 180.0 * M_PI);
-	avg /= 2.0;
+	avg /= AVG_DIVISOR;
 	
 	avg /= (WE_TICKS_PER_CM * 4.0);
 	

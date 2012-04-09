@@ -290,7 +290,8 @@ int get_Position(robot_if_t *ri, vector *loc, vector *vel, int m_t){
 	rovioKalmanFilterSetVelocity(kfilter, vel->v); 
 	get_kalman_filter_data(current->kalmanFiltered);
 	
-	printf("Kalmann Filter Result = ", current->kalmanFiltered);
+	printf("Kalmann Filter Result = ");
+	PrintVector(current->kalmanFiltered);
 	
 	// Report kalman filtered values
 	loc->v[0] = current->kalmanFiltered->v[0];
