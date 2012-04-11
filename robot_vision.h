@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#define AREA_THRESHOLD 0.8
+#define AREA_THRESHOLD 0.875
 #define multiplier 500
 
 typedef enum _square_state_ {

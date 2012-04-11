@@ -187,10 +187,10 @@ void update_pos(robot_if_t *ri){
 	ri_reset_state(ri);
 	
 	// Flush filters
-	filter_flush(ri);
+	//filter_flush(ri);
 	
 	//setup_NS_transforms(current->ns_f);
-	setup_WE_transforms(current->kalmanFiltered);
+	setup_WE_transforms(current->weTranslated );
 	
 	/* reset room switch if it was used */
 	room_switch->v[0] = 0.0;
@@ -274,9 +274,9 @@ int get_Position(robot_if_t *ri, vector *loc, vector *vel, int m_t){
 	current->nsTranslated->v[2] += room_switch->v[2];// + last->kalmanFiltered->v[2];
 	
 	// Shift weTranslated with last kalman
-	current->weTranslated->v[0] += last->kalmanFiltered->v[0];
-	current->weTranslated->v[1] += last->kalmanFiltered->v[1];
-	current->weTranslated->v[2] += last->kalmanFiltered->v[2];
+	//current->weTranslated->v[0] += last->kalmanFiltered->v[0];
+	//current->weTranslated->v[1] += last->kalmanFiltered->v[1];
+	//current->weTranslated->v[2] += last->kalmanFiltered->v[2];
 	
 	//diagnostic
 	printf("NS Translation Result = ");
@@ -290,7 +290,8 @@ int get_Position(robot_if_t *ri, vector *loc, vector *vel, int m_t){
 	rovioKalmanFilterSetVelocity(kfilter, vel->v); 
 	get_kalman_filter_data(current->kalmanFiltered);
 	
-	printf("Kalmann Filter Result = ", current->kalmanFiltered);
+	printf("Kalmann Filter Result = ");
+	PrintVector(current->kalmanFiltered);
 	
 	// Report kalman filtered values
 	loc->v[0] = current->kalmanFiltered->v[0];

@@ -18,6 +18,15 @@ float theta_cor[] = {
 	-1.502438  /*ROOM FIVE THETA COR*/
 };
 
+/*
+float theta_cor[] = {
+	0.060368, //ROOM TWO THETA COR
+	1.556130, //ROOM THREE THETA COR
+	0.020485, //ROOM FOUR THETA COR
+	1.502438  //ROOM FIVE THETA COR
+}
+*/
+
 // Populate NorthStar Stance Object from sensor data
 void get_ns(ns_stance *s, robot_if_t *ri ) {
 	s->x = ri_getX(ri);
@@ -101,12 +110,6 @@ void transform_NS(ns_stance *s, vector *ns){
 	//printf("Shift result = ");
 	//PrintVector(&working_vector);
 	
-	//rotate
-	MultMatVec(ns_rot_matrix, &working_vector, &working_vector_2);
-	//diagnostic
-	//printf("Rotate Result = ");
-	//PrintVector(&working_vector_2);
-	
 	//scale
 	// Update Scaling Matrix based on current signal strength [NOT WORKING RIGHT]
 
@@ -123,10 +126,16 @@ void transform_NS(ns_stance *s, vector *ns){
 		scale_matrix->v[1][1] = scale_matrix->v[0][0];
 	}
 	
-	MultMatVec(scale_matrix, &working_vector_2, ns);
+	MultMatVec(scale_matrix, &working_vector, &working_vector_2);
 	//diagnostic
 	//printf("Scaling Result = ");
-	//PrintVector(ns);	
+	//PrintVector(ns);
+	
+	//rotate
+	MultMatVec(ns_rot_matrix, &working_vector_2, ns);
+	//diagnostic
+	//printf("Rotate Result = ");
+	//PrintVector(&working_vector_2);
 }
 
 // Print out a northstar stance structure
