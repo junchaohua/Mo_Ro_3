@@ -28,6 +28,7 @@ void get_we(we_stance *s, robot_if_t *ri ) {
 
 void setup_WE_transforms(vector *v){
 	// free pointers in case previously declared
+	free(we_shift_vector);
 	free(we_rot_matrix);
   
 	// get memory for pointers
@@ -58,8 +59,8 @@ float get_we_X(we_stance *s) {
 	float avg;
 	
 	// compute the weighted average of X for the left and right wheels
-	avg = (float)s->right_delta * sin(60.0 / 180.0 * M_PI);
-	avg += (float)s->left_delta * sin(120.0 / 180.0 * M_PI);
+	avg = (float)s->right_tot * sin(60.0 / 180.0 * M_PI);
+	avg += (float)s->left_tot * sin(120.0 / 180.0 * M_PI);
 	avg /= AVG_DIVISOR;
 	avg /= WE_TICKS_PER_CM;
 	
@@ -71,8 +72,8 @@ float get_we_Y(we_stance *s) {
 	float avg;
 	
 	// compute the weighted average of Y for the left and right wheels
-	avg = (float)s->right_delta * cos(60.0 / 180.0 * M_PI);
-	avg += (float)s->left_delta * cos(120.0 / 180.0 * M_PI);
+	avg = (float)s->right_tot * cos(60.0 / 180.0 * M_PI);
+	avg += (float)s->left_tot * cos(120.0 / 180.0 * M_PI);
 	avg /= AVG_DIVISOR;
 	
 	avg /= (WE_TICKS_PER_CM * 4.0);
@@ -114,16 +115,11 @@ void transform_WE(we_stance *s, vector *ws){
 	working_vector.v[1] = get_we_Y(s);
 	working_vector.v[2] = theta;
 	
-	// rotate current vector 
-	MultMatVec(we_rot_matrix, &working_vector, &result);
-	
 	// add result to shift vector, put results in reporting vector ws 
-	AddVectors(we_shift_vector, &result, ws);
+	AddVectors(we_shift_vector, &working_vector ,&result);
 	
-	// update shift vector with current ws as running total
-	we_shift_vector->v[0] = ws->v[0];
-	we_shift_vector->v[1] = ws->v[1];
-	we_shift_vector->v[2] = ws->v[2];	
+	// rotate current vector 
+	MultMatVec(we_rot_matrix, &result, ws);	
 }
 
 // set up a waypoint for wheel encoder at turn location 
