@@ -19,6 +19,6 @@ typedef enum _square_state_ {
 } square_state;
 
 
-void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, char *bot_name, int robot_dir);
+void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, char *bot_name, int robot_dir, int flag);
 
 #endif

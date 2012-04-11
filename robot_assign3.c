@@ -296,9 +296,10 @@ int printmenu(){
 	printf("\t3. Turn left 90 degrees.\n");
 	printf("\t4. Turn around (180 degrees).\n");
 	printf("\t5. Just Center.\n");
+	printf("\t6. Center with one pair when facing the wall.\n");
 	
-	while(input < 0 || input > 5) {
-		printf("Please choose a command (0 - 5):\t");
+	while(input < 0 || input > 6) {
+		printf("Please choose a command (0 - 6):\t");
 		input = getc(stdin) - '0';
 		printf("\n");
 	}
@@ -393,7 +394,13 @@ int main(int argv, char **argc) {
 			case 5:
 			{
 				printf("Centering!\n\n");
-				center_robot(&ri, image, final_threshold, argc[1],atoi(argc[2]));
+				center_robot(&ri, image, final_threshold, argc[1],atoi(argc[2]), flag);
+				break;
+			}
+			case 6:
+			{
+				printf("Centering with one pair when facing the wall!\n\n");
+				center_robot(&ri, image, final_threshold, argc[1],atoi(argc[2]), flag);
 				break;
 			}
 			default:

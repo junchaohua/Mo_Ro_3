@@ -454,7 +454,7 @@ square_state get_squares(robot_if_t *ri, squares_t *square_list, IplImage *image
 }
 
 //try to center the robot
-void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, char *bot_name, int robot_dir){
+void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, char *bot_name, int robot_dir, int flag){
 	int 		x_dist_diff,
 			intersect_x = 0,
 			change_dir = 0,
@@ -533,7 +533,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 						//strafe left every 10 rotates when single pair was found
 						if (single_pair_count == 10){
 							single_pair_count = 0;
-							printf("Has pair.  Diff <  40.  strafe left at speed = 3\n");
+							printf("Has pair.  Diff <  40.  strafe right at speed = 3\n");
 							ri_move(ri, RI_MOVE_RIGHT, 3);
 							ri_move(ri, RI_STOP, 10);
 						}
@@ -629,14 +629,32 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 					break;
 				}
 			}
-			
+			// Center with one pair when facing the wall
+			if (flag == 6 && state == hasOnePair){
+				x_dist_diff = get_diff_in_x(square_list, square_list->next, image);
+				//the direction of the robot that's facing is pretty much centered, now center it's position
+				if (x_dist_diff < 30 && x_dist_diff > -30) break;
+				else{
+					if (last_turn_dir == 1){
+						printf("Facing the wall. Strafe right at speed = 3\n");
+						ri_move(ri, RI_MOVE_RIGHT, 3);
+						ri_move(ri, RI_STOP, 10);
+					}
+					else{
+						printf("Facing the wall. Strafe left at speed = 3\n");
+						ri_move(ri, RI_MOVE_LEFT, 3);
+						ri_move(ri, RI_STOP, 10);
+					}
+				}
+				single_pair_count++;
+			}
 			//find the squares list
 			state = get_squares(ri, square_list, image, final_threshold, &slope_diff, bot_name,robot_dir);
 			intersect_x = 0;	
 		}
 		
 	// strafeTo:
-		while(slope_diff > tol || slope_diff < -tol) {
+		while((slope_diff > tol || slope_diff < -tol) && flag == 5) {
 		  	printf("In strafeTo State!\n");
 			i++;
 			
@@ -689,7 +707,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 			//find the squares list
 			state = get_squares(ri, square_list, image, final_threshold, &slope_diff, bot_name,robot_dir);
 			
-			if (state != hasTwoPair) goto pointTo;
+			if (state != hasTwoPair && flag == 5) goto pointTo;
 		}
 	
 	// Release the square list data
