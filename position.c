@@ -296,7 +296,7 @@ int get_Position(robot_if_t *ri, vector *loc, vector *vel, int m_t){
 	// Report kalman filtered values
 	loc->v[0] = current->kalmanFiltered->v[0];
 	loc->v[1] = current->kalmanFiltered->v[1];
-	loc->v[2] = current->kalmanFiltered->v[2];
+	loc->v[2] = fmod(current->kalmanFiltered->v[2], M_PI);
 	
 	lastmove = m_t; // track last state of move type
 	
