@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <time.h>
 #include "position.h"
+#include "wheel_encoder.h"
 #include "PID_Control.h"
 #include "robot_vision.h"
 
@@ -335,7 +336,7 @@ int main(int argv, char **argc) {
 	}
 
 	// Setup the camera
-	if(ri_cfg_camera(&ri, RI_CAMERA_DEFAULT_BRIGHTNESS, RI_CAMERA_DEFAULT_CONTRAST, 5, RI_CAMERA_RES_640, RI_CAMERA_QUALITY_HIGH)) {
+	if(ri_cfg_camera(&ri, 0x10, RI_CAMERA_DEFAULT_CONTRAST, 5, RI_CAMERA_RES_640, RI_CAMERA_QUALITY_HIGH)) {
 		printf("Failed to configure the camera!\n");
 		exit(-1);
 	}
@@ -381,39 +382,47 @@ int main(int argv, char **argc) {
 			case 1:
 			{
 				printf("Going ahead 65cm!\n\n");
-				if(loc->v[2] <= M_PI/4.0 || loc->v[2] > 7.0*M_PI/4.0) 
+				if(direction <= M_PI/4.0 || direction > 7.0*M_PI/4.0) 
 					go_to_position(&ri, image, loc->v[0] + 65.0, loc->v[1] + 0.0, loc);
-				else if(loc->v[2] > M_PI/4.0 && loc->v[2] <= 3.0*M_PI/4.0)
+				else if(direction > M_PI/4.0 && direction <= 3.0*M_PI/4.0)
 					go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] - 65.0, loc);
-				else if(loc->v[2] > 3.0*M_PI/4.0 && loc->v[2] <= 5.0*M_PI/4.0)
+				else if(direction > 3.0*M_PI/4.0 && direction <= 5.0*M_PI/4.0)
 					go_to_position(&ri, image, loc->v[0] - 65.0, loc->v[1] + 0.0, loc);
-				else if(loc->v[2] > 5.0*M_PI/4.0 && loc->v[2] <= 7.0*M_PI/4.0)
+				else if(direction > 5.0*M_PI/4.0 && direction <= 7.0*M_PI/4.0)
 					go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] + 65.0, loc);
 				break;
 			}
 			case 2:
 			{
 				printf("Going back 65cm!\n\n");
-				if(loc->v[2] <= M_PI/4.0 || loc->v[2] > 7.0*M_PI/4.0) 
+				if(direction <= M_PI/4.0 || direction > 7.0*M_PI/4.0) 
 					go_to_position(&ri, image, loc->v[0] - 65.0, loc->v[1] + 0.0, loc);
-				else if(loc->v[2] > M_PI/4.0 && loc->v[2] <= 3.0*M_PI/4.0)
+				else if(direction > M_PI/4.0 && direction <= 3.0*M_PI/4.0)
 					go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] + 65.0, loc);
-				else if(loc->v[2] > 3.0*M_PI/4.0 && loc->v[2] <= 5.0*M_PI/4.0)
+				else if(direction > 3.0*M_PI/4.0 && direction <= 5.0*M_PI/4.0)
 					go_to_position(&ri, image, loc->v[0] + 65.0, loc->v[1] + 0.0, loc);
-				else if(loc->v[2] > 5.0*M_PI/4.0 && loc->v[2] <= 7.0*M_PI/4.0)
+				else if(direction > 5.0*M_PI/4.0 && direction <= 7.0*M_PI/4.0)
 					go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] - 65.0, loc);
 				break;
 			}
 			case 3:
 			{
 				printf("Turning right 90 degrees.\n");
-				rotate_to_theta(&ri, loc->v[2] - M_PI/2.0, loc);
+				//rotate_to_theta(&ri, direction - M_PI/2.0, loc);
+				ri_move(&ri, RI_TURN_RIGHT, 1);
+				ri_move(&ri, RI_TURN_RIGHT, 1);
+				ri_move(&ri, RI_TURN_RIGHT, 1);
+				set_we_theta(direction - M_PI/2.0);
 				break;
 			}
 			case 4:
 			{	
 				printf("Turning left 90 degrees.\n");
-				rotate_to_theta(&ri, loc->v[2] + M_PI/2.0, loc);
+				//rotate_to_theta(&ri, direction + M_PI/2.0, loc);
+				ri_move(&ri, RI_TURN_LEFT, 1);
+				ri_move(&ri, RI_TURN_LEFT, 1);
+				ri_move(&ri, RI_TURN_LEFT, 1);
+				set_we_theta(direction + M_PI/2.0);
 				break;
 			}
 			case 5:

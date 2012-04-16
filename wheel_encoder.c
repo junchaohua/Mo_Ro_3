@@ -16,6 +16,10 @@
 vector *we_shift_vector;
 matrix *we_rot_matrix;
 
+void set_we_theta(float new_theta){
+	we_shift_vector->v[2] = new_theta;
+}
+
 // Populate Wheel Encoder Stance Object from sensor data
 void get_we(we_stance *s, robot_if_t *ri ) {
 	s->left_tot = ri_getWheelEncoderTotals( ri, RI_WHEEL_LEFT );
