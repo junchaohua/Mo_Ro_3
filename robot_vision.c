@@ -507,7 +507,10 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 					
 					//rotate to the left
 					if (x_dist_diff < 0){
-						printf("Has pair.  Diff < - 40.  rotate left at speed = 5\n");
+						//don't roate
+						if (flag == 6 && x_dist_diff > -50) break;
+					
+						printf("Has pair.  Diff < 0.  rotate left at speed = 5\n");
 						ri_move(ri, RI_TURN_LEFT, 5);
 						ri_move(ri, RI_STOP, 10);
 						last_turn_dir = 0;
@@ -516,7 +519,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 						//strafe left every 10 rotates when single pair was found
 						if (single_pair_count == 10){
 							single_pair_count = 0;
-							printf("Has pair.  Diff < - 40.  strafe left at speed = 3\n");
+							printf("Has pair.  Diff < 0.  strafe left at speed = 3\n");
 							ri_move(ri, RI_MOVE_LEFT, 3);
 							ri_move(ri, RI_STOP, 10);
 						}
@@ -524,7 +527,9 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 					
 					//rotate to the right
 					else if (x_dist_diff > 0){
-						printf("Has pair.  Diff > 40.  rotate right at speed = 5\n");
+						//don't roate
+						if (flag == 6 && x_dist_diff < 50) break;
+						printf("Has pair.  Diff > 0.  rotate right at speed = 5\n");
 						ri_move(ri, RI_TURN_RIGHT, 5);
 						ri_move(ri, RI_STOP, 10);
 						last_turn_dir = 1;
@@ -533,7 +538,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 						//strafe left every 10 rotates when single pair was found
 						if (single_pair_count == 10){
 							single_pair_count = 0;
-							printf("Has pair.  Diff <  40.  strafe right at speed = 3\n");
+							printf("Has pair.  Diff <  0.  strafe right at speed = 3\n");
 							ri_move(ri, RI_MOVE_RIGHT, 3);
 							ri_move(ri, RI_STOP, 10);
 						}
@@ -544,22 +549,25 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 				
 				case twoLargest:
 				{	
-					change_dir = 0;
-					last_largest_x = -1;
-					
-					if (square_list->center.x < square_list->next->center.x){
-						printf("Larger square to left of smaller.  rotate right at speed = 6\n");
-						ri_move(ri, RI_TURN_RIGHT, 3);
-						ri_move(ri, RI_STOP, 10);
-						last_turn_dir = 1;
-					}
-					//If largest is to the RIGHT of the next largest, turn left
-					else if (square_list->center.x > square_list->next->center.x){
-						printf("Larger square to right of smaller.  rotate left at speed = 6\n");
-						ri_move(ri, RI_TURN_LEFT, 3);
-						ri_move(ri, RI_STOP, 10);
-						last_turn_dir = 0;
-					}
+					//do not handle rotation with two largest squares, when the bot is facing the wall
+					//if (flag != 6){
+						change_dir = 0;
+						last_largest_x = -1;
+						
+						if (square_list->center.x < square_list->next->center.x){
+							printf("Larger square to left of smaller.  rotate right at speed = 6\n");
+							ri_move(ri, RI_TURN_RIGHT, 3);
+							ri_move(ri, RI_STOP, 10);
+							last_turn_dir = 1;
+						}
+						//If largest is to the RIGHT of the next largest, turn left
+						else if (square_list->center.x > square_list->next->center.x){
+							printf("Larger square to right of smaller.  rotate left at speed = 6\n");
+							ri_move(ri, RI_TURN_LEFT, 3);
+							ri_move(ri, RI_STOP, 10);
+							last_turn_dir = 0;
+						}
+					//}
 					break;
 				}
 					
@@ -630,23 +638,38 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 				}
 			}
 			// Center with one pair when facing the wall
-			if (flag == 6 && state == hasOnePair){
-				x_dist_diff = get_diff_in_x(square_list, square_list->next, image);
-				//the direction of the robot that's facing is pretty much centered, now center it's position
-				if (x_dist_diff < 30 && x_dist_diff > -30) break;
-				else{
-					if (last_turn_dir == 1){
-						printf("Facing the wall. Strafe right at speed = 3\n");
-						ri_move(ri, RI_MOVE_RIGHT, 3);
-						ri_move(ri, RI_STOP, 10);
-					}
-					else{
+			if (flag == 6){
+				state = get_squares(ri, square_list, image, final_threshold, &slope_diff, bot_name,robot_dir);
+				
+				if (state == hasOnePair){
+					x_dist_diff = get_diff_in_x(square_list, square_list->next, image);
+					//the direction of the robot that's facing is pretty much centered, now center it's position
+					if (x_dist_diff < 50 && x_dist_diff > -50) break;
+					/*else{
+						if (last_turn_dir == 1){
+							printf("Facing the wall. Strafe right at speed = 3\n");
+							ri_move(ri, RI_MOVE_RIGHT, 3);
+							ri_move(ri, RI_STOP, 10);
+						}
+						else{
+							printf("Facing the wall. Strafe left at speed = 3\n");
+							ri_move(ri, RI_MOVE_LEFT, 3);
+							ri_move(ri, RI_STOP, 10);
+						}
+					}*/
+					/*if (x_dist_diff < -60){
 						printf("Facing the wall. Strafe left at speed = 3\n");
 						ri_move(ri, RI_MOVE_LEFT, 3);
 						ri_move(ri, RI_STOP, 10);
 					}
+					else if (x_dist_diff > 60){
+						printf("Facing the wall. Strafe right at speed = 3\n");
+						ri_move(ri, RI_MOVE_RIGHT, 3);
+						ri_move(ri, RI_STOP, 10);
+					}*/
+					//else break;
+					single_pair_count++;
 				}
-				single_pair_count++;
 			}
 			//find the squares list
 			state = get_squares(ri, square_list, image, final_threshold, &slope_diff, bot_name,robot_dir);
@@ -684,20 +707,28 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 		
 	// moveTo:
 	        avg_area = get_pair_average_area(square_list, square_list->next);
-		printf("Average area = %d\n", avg_area);
+		//printf("Average area = %d\n", avg_area);
 		
-		// 1550 +- 72
-		while(avg_area < 1478 || avg_area > 1622) { 
+		// 1500 +- 72
+		while(avg_area < 1428 || avg_area > 1572) { 
 			printf("In moveTo State!\n");
-			
+			printf("Average area = %d\n", avg_area);
 			if(avg_area < 1478) {
 				printf("Too far back.  Moving forwards.\n");
-				ri_move(ri, RI_MOVE_FORWARD, 7);
+				if (flag == 6){
+					ri_move(ri, RI_MOVE_FORWARD, 9);
+					//ri_move(ri, RI_STOP, 10);
+				}
+				else ri_move(ri, RI_MOVE_FORWARD, 7);
 				//ri_move(ri, RI_STOP, 10);
 			}
 			else if(avg_area > 1622) {
 				printf("Too far forward.  Moving backwards.\n");
-				ri_move(ri, RI_MOVE_BACKWARD, 7);
+				if (flag == 6){
+					ri_move(ri, RI_MOVE_BACKWARD, 9);
+					//ri_move(ri, RI_STOP, 10);
+				}
+ 				else ri_move(ri, RI_MOVE_BACKWARD, 7);
 				//ri_move(ri, RI_STOP, 10);
 			}
 			
