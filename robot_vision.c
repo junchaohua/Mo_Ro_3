@@ -713,7 +713,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 		while(avg_area < 1428 || avg_area > 1572) { 
 			printf("In moveTo State!\n");
 			printf("Average area = %d\n", avg_area);
-			if(avg_area < 1478) {
+			if(avg_area < 1428) {
 				printf("Too far back.  Moving forwards.\n");
 				if (flag == 6){
 					ri_move(ri, RI_MOVE_FORWARD, 9);
@@ -722,7 +722,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 				else ri_move(ri, RI_MOVE_FORWARD, 7);
 				//ri_move(ri, RI_STOP, 10);
 			}
-			else if(avg_area > 1622) {
+			else if(avg_area > 1572) {
 				printf("Too far forward.  Moving backwards.\n");
 				if (flag == 6){
 					ri_move(ri, RI_MOVE_BACKWARD, 9);
