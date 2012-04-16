@@ -12,7 +12,6 @@
 #include <unistd.h>
 #include <time.h>
 #include "position.h"
-#include "wheel_encoder.h"
 #include "PID_Control.h"
 #include "robot_vision.h"
 
@@ -315,7 +314,8 @@ int main(int argv, char **argc) {
 			*final_threshold = NULL;
 	vector 		*loc,
 			*vel;
-	float		direction = 0.0;
+	float		direction = 0.0,
+			we_theta_update = 0.0;
 	int		flag = 1;
 
 	// Make sure we have a valid command line argument
@@ -391,6 +391,8 @@ int main(int argv, char **argc) {
 				else if(direction > 5.0*M_PI/4.0 && direction <= 7.0*M_PI/4.0)
 					go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] + 65.0, loc);
 				break;
+				
+				we_theta_update = direction;
 			}
 			case 2:
 			{
@@ -404,6 +406,8 @@ int main(int argv, char **argc) {
 				else if(direction > 5.0*M_PI/4.0 && direction <= 7.0*M_PI/4.0)
 					go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] - 65.0, loc);
 				break;
+				
+				we_theta_update = direction;
 			}
 			case 3:
 			{
@@ -412,7 +416,8 @@ int main(int argv, char **argc) {
 				ri_move(&ri, RI_TURN_RIGHT, 1);
 				ri_move(&ri, RI_TURN_RIGHT, 1);
 				ri_move(&ri, RI_TURN_RIGHT, 1);
-				set_we_theta(direction - M_PI/2.0);
+				
+				we_theta_update = direction - M_PI/2.0;
 				break;
 			}
 			case 4:
@@ -422,19 +427,24 @@ int main(int argv, char **argc) {
 				ri_move(&ri, RI_TURN_LEFT, 1);
 				ri_move(&ri, RI_TURN_LEFT, 1);
 				ri_move(&ri, RI_TURN_LEFT, 1);
-				set_we_theta(direction + M_PI/2.0);
+				
+				we_theta_update = direction - M_PI/2.0;
 				break;
 			}
 			case 5:
 			{
 				printf("Centering!\n\n");
 				center_robot(&ri, image, final_threshold, argc[1],atoi(argc[2]), flag);
+				
+				we_theta_update = direction;
 				break;
 			}
 			case 6:
 			{
 				printf("Centering with one pair when facing the wall!\n\n");
 				center_robot(&ri, image, final_threshold, argc[1],atoi(argc[2]), flag);
+				
+				we_theta_update = direction;
 				break;
 			}
 			default:
@@ -443,7 +453,7 @@ int main(int argv, char **argc) {
 			}			  
 		}
 		
-		update_pos(&ri);
+		update_pos(&ri, we_theta_update);
 		
 		flag = printmenu();
 	}
