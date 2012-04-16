@@ -11,9 +11,9 @@
 #include <stdio.h>
 #include "matvec.h"
 
-#define AVG_DIVISOR		1.0  // Change this to 1.0 if one of the wheel encoders isn't working
-#define WE_TICKS_PER_CM		4.0
-#define ROTATION_SCALING	4.0
+#define AVG_DIVISOR		2.0  // Change this to 1.0 if one of the wheel encoders isn't working
+#define WE_TICKS_PER_CM		1.0
+#define ROTATION_SCALING	1.9
 
 // WE struct
 typedef struct _we_stance_ {

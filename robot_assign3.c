@@ -292,9 +292,9 @@ int printmenu(){
 	printf("What would you like to do?\n");
 	printf("\t0. Quit.\n");
 	printf("\t1. Go straight ahead 1 block.\n");
-	printf("\t2. Turn right 90 degrees.\n");
-	printf("\t3. Turn left 90 degrees.\n");
-	printf("\t4. Turn around (180 degrees).\n");
+	printf("\t2. Go backwards 1 block.\n");
+	printf("\t3. Turn right 90 degrees.\n");
+	printf("\t4. Turn left 90 degrees.\n");
 	printf("\t5. Just Center.\n");
 	printf("\t6. Center with one pair when facing the wall.\n");
 	
@@ -314,6 +314,7 @@ int main(int argv, char **argc) {
 			*final_threshold = NULL;
 	vector 		*loc,
 			*vel;
+	float		direction = 0.0;
 	int		flag = 1;
 
 	// Make sure we have a valid command line argument
@@ -346,7 +347,8 @@ int main(int argv, char **argc) {
 	
 	loc->v[0] = 0;
 	loc->v[1] = 0;
-	loc->v[2] = 0;
+	if(atoi(argc[2]) == 0)	loc->v[2] = 0.0;
+	else 			loc->v[2] = M_PI;
 	
 	vel->v[0] = 0;
 	vel->v[1] = 0;
@@ -372,23 +374,46 @@ int main(int argv, char **argc) {
 	flag = printmenu();
 	
 	while(flag != 0) {
+		if(loc->v[2] >= 0.0) 	direction = loc->v[2];
+		else			direction = M_PI + loc->v[2];
+		
 		switch(flag) {
 			case 1:
 			{
 				printf("Going ahead 65cm!\n\n");
-				go_to_position(&ri, image, loc->v[0] + 65.0, loc->v[1] + 0.0, loc);
+				if(loc->v[2] <= M_PI/4.0 || loc->v[2] > 7.0*M_PI/4.0) 
+					go_to_position(&ri, image, loc->v[0] + 65.0, loc->v[1] + 0.0, loc);
+				else if(loc->v[2] > M_PI/4.0 && loc->v[2] <= 3.0*M_PI/4.0)
+					go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] - 65.0, loc);
+				else if(loc->v[2] > 3.0*M_PI/4.0 && loc->v[2] <= 5.0*M_PI/4.0)
+					go_to_position(&ri, image, loc->v[0] - 65.0, loc->v[1] + 0.0, loc);
+				else if(loc->v[2] > 5.0*M_PI/4.0 && loc->v[2] <= 7.0*M_PI/4.0)
+					go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] + 65.0, loc);
 				break;
 			}
 			case 2:
 			{
+				printf("Going back 65cm!\n\n");
+				if(loc->v[2] <= M_PI/4.0 || loc->v[2] > 7.0*M_PI/4.0) 
+					go_to_position(&ri, image, loc->v[0] - 65.0, loc->v[1] + 0.0, loc);
+				else if(loc->v[2] > M_PI/4.0 && loc->v[2] <= 3.0*M_PI/4.0)
+					go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] + 65.0, loc);
+				else if(loc->v[2] > 3.0*M_PI/4.0 && loc->v[2] <= 5.0*M_PI/4.0)
+					go_to_position(&ri, image, loc->v[0] + 65.0, loc->v[1] + 0.0, loc);
+				else if(loc->v[2] > 5.0*M_PI/4.0 && loc->v[2] <= 7.0*M_PI/4.0)
+					go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] - 65.0, loc);
 				break;
 			}
 			case 3:
 			{
+				printf("Turning right 90 degrees.\n");
+				rotate_to_theta(&ri, loc->v[2] - M_PI/2.0, loc);
 				break;
 			}
 			case 4:
-			{
+			{	
+				printf("Turning left 90 degrees.\n");
+				rotate_to_theta(&ri, loc->v[2] + M_PI/2.0, loc);
 				break;
 			}
 			case 5:
