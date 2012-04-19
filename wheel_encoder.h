@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include "matvec.h"
 
-#define AVG_DIVISOR		1.0  // Change this to 1.0 if one of the wheel encoders isn't working
+#define AVG_DIVISOR		2.0  // Change this to 1.0 if one of the wheel encoders isn't working
 #define WE_TICKS_PER_CM		2.0
 #define ROTATION_SCALING	1.0
 
@@ -25,9 +25,6 @@ typedef struct _we_stance_ {
 	int back_delta;
 } we_stance;
 
-
-// Force Wheel Encoder theta to a Known value
-void set_we_theta(float new_theta);
 
 // Populate Wheel Encoder Stance Object from sensor data
 void get_we(we_stance *s, robot_if_t *ri );

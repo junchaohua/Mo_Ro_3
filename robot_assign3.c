@@ -415,7 +415,7 @@ int main(int argv, char **argc) {
 				//rotate_to_theta(&ri, direction - M_PI/2.0, loc);
 				ri_move(&ri, RI_TURN_RIGHT, 1);
 				ri_move(&ri, RI_TURN_RIGHT, 1);
-				ri_move(&ri, RI_TURN_RIGHT, 1);
+				ri_move(&ri, RI_TURN_RIGHT, 5);
 				
 				we_theta_update = direction - M_PI/2.0;
 				break;
@@ -426,7 +426,7 @@ int main(int argv, char **argc) {
 				//rotate_to_theta(&ri, direction + M_PI/2.0, loc);
 				ri_move(&ri, RI_TURN_LEFT, 1);
 				ri_move(&ri, RI_TURN_LEFT, 1);
-				ri_move(&ri, RI_TURN_LEFT, 1);
+				ri_move(&ri, RI_TURN_LEFT, 5);
 				
 				we_theta_update = direction - M_PI/2.0;
 				break;
@@ -453,6 +453,7 @@ int main(int argv, char **argc) {
 			}			  
 		}
 		
+		printf("WE Theta Update = %f\n", we_theta_update);
 		update_pos(&ri, we_theta_update);
 		
 		flag = printmenu();
