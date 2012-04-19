@@ -288,6 +288,8 @@ square_state get_squares(robot_if_t *ri, squares_t *square_list, IplImage *image
 			printf("Failed to update sensor information!\n");
 		}
 	}
+	
+	cvWaitKey(75);
 
 	// Get the current camera image
 	if(ri_get_image(ri, image) != RI_RESP_SUCCESS) {

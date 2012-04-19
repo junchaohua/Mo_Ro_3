@@ -287,7 +287,8 @@ void go_to_position(robot_if_t *ri, IplImage *image,  float end_x, float end_y, 
 
 /* Print out a menu of selections */
 int printmenu(){
-	int input = -1;
+	int input = -1,
+	    ch;
 	
 	printf("What would you like to do?\n");
 	printf("\t0. Quit.\n");
@@ -297,6 +298,8 @@ int printmenu(){
 	printf("\t4. Turn left 90 degrees.\n");
 	printf("\t5. Just Center.\n");
 	printf("\t6. Center with one pair when facing the wall.\n");
+	
+	while ((ch = getchar()) != '\n' && ch != EOF);
 	
 	while(input < 0 || input > 6) {
 		printf("Please choose a command (0 - 6):\t");
@@ -314,13 +317,12 @@ int main(int argv, char **argc) {
 			*final_threshold = NULL;
 	vector 		*loc,
 			*vel;
-	float		direction = 0.0,
-			we_theta_update = 0.0;
+	float		direction = 0.0;
 	int		flag = 1;
 
 	// Make sure we have a valid command line argument
 	if(argv <= 2) {
-		printf("Usage: robot_test <address of robot>, argc[2]: 0 = right to left, 1 = left to right\n");	
+		printf("Usage: robot_test <address of robot>, argc[2]: 0 = BOT 2 start position, 1 = BOT 1 start position\n");	
 		exit(-1);
 	}
 
@@ -341,8 +343,8 @@ int main(int argv, char **argc) {
 		exit(-1);
 	}
 	
-	if(ri_getHeadPosition(&ri) != RI_ROBOT_HEAD_LOW ) ri_move(&ri, RI_HEAD_DOWN , 1);	
-
+	if(ri_getHeadPosition(&ri) != RI_ROBOT_HEAD_LOW ) ri_move(&ri, RI_HEAD_DOWN , 1);
+	
 	loc = (vector *)calloc(1, sizeof(vector));
 	vel = (vector *)calloc(1, sizeof(vector));
 	
@@ -350,10 +352,11 @@ int main(int argv, char **argc) {
 	loc->v[1] = 0;
 	if(atoi(argc[2]) == 0)	loc->v[2] = 0.0;
 	else 			loc->v[2] = M_PI;
+	direction = loc->v[2];
 	
 	vel->v[0] = 0;
 	vel->v[1] = 0;
-	vel->v[2] = 0;
+	vel->v[2] = M_PI/4.0;
 
 	// Create an image to store the image from the camera
 	image = cvCreateImage(cvSize(640, 480), IPL_DEPTH_8U, 3);
@@ -375,49 +378,67 @@ int main(int argv, char **argc) {
 	flag = printmenu();
 	
 	while(flag != 0) {
-		if(loc->v[2] >= 0.0) 	direction = loc->v[2];
-		else			direction = M_PI + loc->v[2];
-		
+		//if(loc->v[2] >= 0.0) 	direction = loc->v[2];
+		//else			direction = M_PI + loc->v[2];
+				
 		switch(flag) {
 			case 1:
 			{
 				printf("Going ahead 65cm!\n\n");
-				if(direction <= M_PI/4.0 || direction > 7.0*M_PI/4.0) 
-					go_to_position(&ri, image, loc->v[0] + 65.0, loc->v[1] + 0.0, loc);
-				else if(direction > M_PI/4.0 && direction <= 3.0*M_PI/4.0)
-					go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] - 65.0, loc);
-				else if(direction > 3.0*M_PI/4.0 && direction <= 5.0*M_PI/4.0)
-					go_to_position(&ri, image, loc->v[0] - 65.0, loc->v[1] + 0.0, loc);
-				else if(direction > 5.0*M_PI/4.0 && direction <= 7.0*M_PI/4.0)
-					go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] + 65.0, loc);
+				// + X 
+				if(fabs(direction) <= M_PI/4.0 || fabs(direction) > 7.0*M_PI/4.0) {
+								go_to_position(&ri, image, loc->v[0] + 65.0, loc->v[1] + 0.0, loc);
+				}
+				// + Y
+				else if(fabs(direction) > M_PI/4.0 && fabs(direction) <= 3.0*M_PI/4.0) {
+					if(direction >= 0) 	go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] + 65.0, loc);
+					else 			go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] - 65.0, loc);
+				}
+				// - X
+				else if(fabs(direction) > 3.0*M_PI/4.0 && fabs(direction) <= 5.0*M_PI/4.0) {
+								go_to_position(&ri, image, loc->v[0] - 65.0, loc->v[1] + 0.0, loc);
+				}
+				// - Y
+				else if(fabs(direction) > 5.0*M_PI/4.0 && fabs(direction) <= 7.0*M_PI/4.0){
+					if(direction >= 0) 	go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] - 65.0, loc);
+					else			go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] + 65.0, loc);
+				}
 				break;
-				
-				we_theta_update = direction;
 			}
 			case 2:
 			{
 				printf("Going back 65cm!\n\n");
-				if(direction <= M_PI/4.0 || direction > 7.0*M_PI/4.0) 
-					go_to_position(&ri, image, loc->v[0] - 65.0, loc->v[1] + 0.0, loc);
-				else if(direction > M_PI/4.0 && direction <= 3.0*M_PI/4.0)
-					go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] + 65.0, loc);
-				else if(direction > 3.0*M_PI/4.0 && direction <= 5.0*M_PI/4.0)
-					go_to_position(&ri, image, loc->v[0] + 65.0, loc->v[1] + 0.0, loc);
-				else if(direction > 5.0*M_PI/4.0 && direction <= 7.0*M_PI/4.0)
-					go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] - 65.0, loc);
-				break;
 				
-				we_theta_update = direction;
+				printf("Going ahead 65cm!\n\n");
+				// + X 
+				if(fabs(direction) <= M_PI/4.0 || fabs(direction) > 7.0*M_PI/4.0) {
+								go_to_position(&ri, image, loc->v[0] - 65.0, loc->v[1] + 0.0, loc);
+				}
+				// + Y
+				else if(fabs(direction) > M_PI/4.0 && fabs(direction) <= 3.0*M_PI/4.0) {
+					if(direction >= 0) 	go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] - 65.0, loc);
+					else 			go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] + 65.0, loc);
+				}
+				// - X
+				else if(fabs(direction) > 3.0*M_PI/4.0 && fabs(direction) <= 5.0*M_PI/4.0) {
+								go_to_position(&ri, image, loc->v[0] + 65.0, loc->v[1] + 0.0, loc);
+				}
+				// - Y
+				else if(fabs(direction) > 5.0*M_PI/4.0 && fabs(direction) <= 7.0*M_PI/4.0){
+					if(direction >= 0) 	go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] + 65.0, loc);
+					else			go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] - 65.0, loc);
+				}
+				break;
 			}
 			case 3:
 			{
 				printf("Turning right 90 degrees.\n");
 				//rotate_to_theta(&ri, direction - M_PI/2.0, loc);
 				ri_move(&ri, RI_TURN_RIGHT, 1);
-				ri_move(&ri, RI_TURN_RIGHT, 1);
-				ri_move(&ri, RI_TURN_RIGHT, 5);
-				
-				we_theta_update = direction - M_PI/2.0;
+				ri_move(&ri, RI_TURN_RIGHT, 2);
+				ri_move(&ri, RI_TURN_RIGHT, 3);
+								
+				direction -= M_PI/2.0;
 				break;
 			}
 			case 4:
@@ -425,36 +446,34 @@ int main(int argv, char **argc) {
 				printf("Turning left 90 degrees.\n");
 				//rotate_to_theta(&ri, direction + M_PI/2.0, loc);
 				ri_move(&ri, RI_TURN_LEFT, 1);
-				ri_move(&ri, RI_TURN_LEFT, 1);
-				ri_move(&ri, RI_TURN_LEFT, 5);
+				ri_move(&ri, RI_TURN_LEFT, 2);
+				ri_move(&ri, RI_TURN_LEFT, 3);
 				
-				we_theta_update = direction - M_PI/2.0;
+				direction += M_PI/2.0;
 				break;
 			}
 			case 5:
 			{
 				printf("Centering!\n\n");
 				center_robot(&ri, image, final_threshold, argc[1],atoi(argc[2]), flag);
-				
-				we_theta_update = direction;
 				break;
 			}
 			case 6:
 			{
 				printf("Centering with one pair when facing the wall!\n\n");
 				center_robot(&ri, image, final_threshold, argc[1],atoi(argc[2]), flag);
-				
-				we_theta_update = direction;
 				break;
 			}
 			default:
 			{
 				break;
-			}			  
+			}
 		}
 		
-		printf("WE Theta Update = %f\n", we_theta_update);
-		update_pos(&ri, we_theta_update);
+		printf("WE Theta Update = %f\n", direction);
+		update_pos(&ri, direction);
+		
+		get_Position(&ri, loc, vel, FORWARD);
 		
 		flag = printmenu();
 	}
