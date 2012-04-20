@@ -78,9 +78,12 @@ int isObstructed(array_map_obj_t *cell){
 	}
 	  
 }
-void makeAMove(){//doesn't use backward right now//fill in outline comments
-	robot_heading where_to_go = whereToGo();
-	if(facing!=where_to_go){//point the robot in the direction its moving
+
+//doesn't use backward right now
+void makeAMove(robot_if_t *ri){//fill in outline comments
+	robot_heading 	where_to_go = whereToGo(ri);
+	
+	if(facing != where_to_go){//point the robot in the direction its moving
 		if((facing==HEADING_UP)&&(where_to_go==HEADING_DOWN)){
 			//turn180 left or right
 		}
@@ -119,8 +122,16 @@ void makeAMove(){//doesn't use backward right now//fill in outline comments
 		}
 		facing = where_to_go;//set updated heading
 	}
+	
 	//move forward 1 space //fill me in
 	
+	// center
+	if(pairsToExpect(facing, where_to_go)==2){
+	      //center with 2 pairs;//fill me in
+	}
+	if(pairsToExpect(facing, where_to_go)==1){
+	      //center with 1 pair;//fill me in
+	}
 	
 	if(facing == HEADING_UP){//update heading
 		y--;
@@ -131,71 +142,84 @@ void makeAMove(){//doesn't use backward right now//fill in outline comments
 	}else if(facing == HEADING_RIGHT){
 		x++;
 	}
-	if(pairsToExpect(facing, where_to_go)==2){
-	      //center with 2 pairs;//fill me in
-	}
-	if(pairsToExpect(facing, where_to_go)==1){
-	      //center with 1 pair;//fill me in
-	}
+	
+	// update map
+	ri_update_map(ri, x, y);
 }
 
 //finds biggest adjacent cell and goes there
-robot_heading whereToGo(){
+robot_heading whereToGo(robot_if_t *ri){
 	robot_heading direction_to_move; 
-	int max_value = 0;
-	int temp;
-	if(x>0){//look left
-		if(!isObstructed(&array2D(map,y,x-1))){//if the spot that im checking isn't obstructed
-			temp = array2D(map,y,x-1).points;
-			if(temp>max_value){
-				//make this the new spot to go and update max value
-				max_value = temp;
-				direction_to_move = HEADING_LEFT;
+	int max_value = 0,
+	    temp,
+	    new_x,
+	    new_y;
+	
+	// repeat in case the square we want to move to somehow gets reserved before we can reserve it 
+	do {
+		if(x>0){//look left
+			if(!isObstructed(&array2D(map,y,x-1))){//if the spot that im checking isn't obstructed
+				temp = array2D(map,y,x-1).points;
+				if(temp>max_value){
+					//make this the new spot to go and update max value
+					max_value = temp;
+					direction_to_move = HEADING_LEFT;
+					new_x = x + 1;
+					new_y = y;
+				}
 			}
 		}
-	}
-	if(y>0){//look up
-		if(!isObstructed(&array2D(map,y-1,x))){//if the spot that im checking isn't obstructed
-			temp = array2D(map,y-1,x).points;
-			if(temp>max_value){
-				//make this the new spot to go and update max value
-				max_value = temp;
-				direction_to_move = HEADING_UP;
+		if(y>0){//look up
+			if(!isObstructed(&array2D(map,y-1,x))){//if the spot that im checking isn't obstructed
+				temp = array2D(map,y-1,x).points;
+				if(temp>max_value){
+					//make this the new spot to go and update max value
+					max_value = temp;
+					direction_to_move = HEADING_UP;
+					new_x = x;
+					new_y = y - 1;
+				}
+			}
+		  
+		}
+		if(x<6){//look right
+			if(!isObstructed(&array2D(map,y,x+1))){//if the spot that im checking isn't obstructed
+				temp = array2D(map,y,x+1).points;
+				if(temp>max_value){
+					//make this the new spot to go and update max value
+					max_value = temp;
+					direction_to_move = HEADING_RIGHT;
+					new_x = x - 1;
+					new_y = y;
+				}
+			}
+		  
+		}
+		if(y<4){//look down
+			if(!isObstructed(&array2D(map,y+1,x))){//if the spot that im checking isn't obstructed
+				temp = array2D(map,y+1,x).points;
+				if(temp>max_value){
+					//make this the new spot to go and update max value
+					max_value = temp;
+					direction_to_move = HEADING_DOWN;
+					new_x = x;
+					new_y = y + 1;
+				}
 			}
 		}
-	  
-	}
-	if(x<6){//look right
-		 if(!isObstructed(&array2D(map,y,x+1))){//if the spot that im checking isn't obstructed
-			temp = array2D(map,y,x+1).points;
-			if(temp>max_value){
-				//make this the new spot to go and update max value
-				max_value = temp;
-				direction_to_move = HEADING_RIGHT;
-			}
-		}
-	  
-	}
-	if(y<4){//look down
-		if(!isObstructed(&array2D(map,y+1,x))){//if the spot that im checking isn't obstructed
-			temp = array2D(map,y+1,x).points;
-			if(temp>max_value){
-				//make this the new spot to go and update max value
-				max_value = temp;
-				direction_to_move = HEADING_DOWN;
-			}
-		}
-	}
+		
+	} while(ri_reserve_map(ri, new_x, new_y) == 0);  // try to reserve the square you want to move to
+	
 	return direction_to_move;
 }
 
-
+/* get map_list from server and put it into map array */
 void updateMap(array_map_obj_t *map, robot_if_t *ri, int *score1, int *score2){
 	map_obj_t *map_list,
 		  *map_list_idx;
 	int i, j;
 	
-	// Get the map from the server and print out the information
+	// Get the map from the server and update scores
         map_list = ri_get_map(ri, score1, score2);
 	map_list_idx = map_list;
 	
@@ -208,7 +232,7 @@ void updateMap(array_map_obj_t *map, robot_if_t *ri, int *score1, int *score2){
 		}
 	}
 	
-	/* free map */
+	// free map list
         while(map_list->next != NULL) {
 		map_list_idx = map_list->next;
 		free(map_list);
@@ -252,32 +276,40 @@ int main(int argv, char **argc) {
 	    x = 6;
 	}
 	
-	/* update map with functioning API calls */
-	updateMap(map, &ri, &score1, &score2);
+	// run the game until score is >= 25 so you can make some reservations and moves
+	while(score1 < 25 && score2 < 25 ) {
 	
-	printf("Score: %i to %i\n", score1, score2);
-        for(i = 0; i < ROWS; i++) {
-		for(j = 0; j < COLS; j++) {
-			switch(array2D(map,i,j).type){
-				case MAP_OBJ_EMPTY:
-					printf(" ");
-					break;
-				case MAP_OBJ_PELLET:
-					printf("%i", array2D(map,i,j).points);
-					break;
-				case MAP_OBJ_ROBOT_1:
-					printf("r");
-					break;
-				case MAP_OBJ_ROBOT_2:
-					printf("R");
-					break;
-				case MAP_OBJ_POST:
-					printf("X");
-					break;
+		// update map with functioning API calls
+		updateMap(map, &ri, &score1, &score2);
+		
+		// print the map
+		printf("Score: %i to %i\n", score1, score2);
+		for(i = 0; i < ROWS; i++) {
+			for(j = 0; j < COLS; j++) {
+				switch(array2D(map,i,j).type){
+					case MAP_OBJ_EMPTY:
+						printf(" ");
+						break;
+					case MAP_OBJ_PELLET:
+						printf("%i", array2D(map,i,j).points);
+						break;
+					case MAP_OBJ_ROBOT_1:
+						printf("r");
+						break;
+					case MAP_OBJ_ROBOT_2:
+						printf("R");
+						break;
+					case MAP_OBJ_POST:
+						printf("X");
+						break;
+				}
+				printf("\t");
 			}
-			printf("\t");
+			printf("\n");
 		}
-		printf("\n");
+		
+		makeAMove(&ri);
+		
 	}
         
 	free(map);

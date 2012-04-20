@@ -30,8 +30,8 @@ int getRow();
 int getCol();
 int pairsToExpect(robot_heading heading, robot_heading direction_to_move);
 int isObstructed(array_map_obj_t *cell);
-robot_heading whereToGo();
+void makeAMove(robot_if_t *ri);
+robot_heading whereToGo(robot_if_t *ri);
 void updateMap(array_map_obj_t *map, robot_if_t *ri, int *score1, int *score2);
-void makeAMove();
 
 #endif
