@@ -302,7 +302,7 @@ int printmenu(){
 	while ((ch = getchar()) != '\n' && ch != EOF);
 	
 	while(input < 0 || input > 6) {
-		printf("Please choose a command (0 - 6):\t");
+		printf("Please choose a command (0 - 6): ");
 		input = getc(stdin) - '0';
 		printf("\n");
 	}
@@ -338,7 +338,7 @@ int main(int argv, char **argc) {
 	}
 
 	// Setup the camera
-	if(ri_cfg_camera(&ri, 0x10, RI_CAMERA_DEFAULT_CONTRAST, 5, RI_CAMERA_RES_640, RI_CAMERA_QUALITY_HIGH)) {
+	if(ri_cfg_camera(&ri, RI_CAMERA_DEFAULT_BRIGHTNESS, RI_CAMERA_DEFAULT_CONTRAST, 5, RI_CAMERA_RES_640, RI_CAMERA_QUALITY_HIGH)) {
 		printf("Failed to configure the camera!\n");
 		exit(-1);
 	}

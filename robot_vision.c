@@ -631,7 +631,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 					}
 					else if (last_turn_dir == 1){
 						printf("No squares found!  Changing to rotate left!\n");
-						ri_move(ri, RI_TURN_LEFT, 3);
+						ri_move(ri, RI_TURN_LEFT, 1);
 						ri_move(ri, RI_STOP, 10);
 						last_turn_dir = 0;
 					}
@@ -711,8 +711,8 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 	        avg_area = get_pair_average_area(square_list, square_list->next);
 		//printf("Average area = %d\n", avg_area);
 		
-		// 1500 +- 72
-		while(avg_area < 1428 || avg_area > 1572) { 
+		// 1500 +- 72  switched to 1400, it was moving too far forward in the square
+		while(avg_area < 1328 || avg_area > 1472) { 
 			printf("In moveTo State!\n");
 			printf("Average area = %d\n", avg_area);
 			if(avg_area < 1428) {

@@ -16,11 +16,11 @@
 // **** you are free to adjust these values as you like ***** 
 #define NORTHSTAR_UNCERTAINTY_X  .20 // this is the uncertainty of the northstar readings, we are providing
 #define NORTHSTAR_UNCERTAINTY_Y  .20 // you with the capability to independently set the x,y,and theta
-#define NORTHSTAR_UNCERTAINTY_TH .05
+#define NORTHSTAR_UNCERTAINTY_TH .20
 
 #define WHEELENC_UNCERTAINTY_X  .20 // this is the uncertainty of the wheel encoder readings, 
 #define WHEELENC_UNCERTAINTY_Y  .20 // 
-#define WHEELENC_UNCERTAINTY_TH .40
+#define WHEELENC_UNCERTAINTY_TH .01
 
 #define PROCESS_UNCERTAINTY_X  .35 // this is the uncertainty about whether the robot will obey the model
 #define PROCESS_UNCERTAINTY_Y  .35
