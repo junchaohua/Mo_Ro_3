@@ -150,11 +150,74 @@ void makeAMove(robot_if_t *ri){//fill in outline comments
 	//printf("updating map with x = %d and y = %d\n", x, y);//diagnostic
 	ri_update_map(ri, x, y);
 }
-
+int sumCrawler(robot_heading comingFrom, int xCursor, int yCursor, int movesLeft){//helper method for whereToGo
+	if(movesLeft==0){//base case
+	    return 0;
+	}
+	robot_heading direction_to_move, direction_coming_from;// = comingFrom;
+	int new_x, new_y, temp, max_value=-1;
+	if(x>0&&comingFrom!=HEADING_LEFT){//look left
+		if(!isObstructed(&array2D(map,yCursor,xCursor-1))){//if the spot that im checking isn't obstructed
+			temp = array2D(map,yCursor,xCursor-1).points;	
+			if(temp>max_value){
+				//make this the new spot to go and update max value
+				max_value = temp;
+				direction_to_move = HEADING_LEFT;
+				direction_coming_from = HEADING_RIGHT;
+				new_x = xCursor - 1;//+ 1;
+				new_y = yCursor;
+			}
+		}
+	}
+	if(yCursor>0&&comingFrom!=HEADING_UP){//look up
+		if(!isObstructed(&array2D(map,yCursor-1,xCursor))){//if the spot that im checking isn't obstructed
+			temp = array2D(map,yCursor-1,xCursor).points;
+			if(temp>max_value){
+				//make this the new spot to go and update max value
+				max_value = temp;
+				direction_to_move = HEADING_UP;
+				direction_coming_from = HEADING_DOWN;
+				new_x = xCursor;
+				new_y = yCursor - 1;
+			}
+		}
+	  
+	}
+	if(x<6&&comingFrom!=HEADING_RIGHT){//look right
+		if(!isObstructed(&array2D(map,yCursor,xCursor+1))){//if the spot that im checking isn't obstructed
+			temp = array2D(map,yCursor,xCursor+1).points;
+			if(temp>max_value){
+				//make this the new spot to go and update max value
+				max_value = temp;
+				direction_to_move = HEADING_RIGHT;
+				direction_coming_from = HEADING_LEFT;
+				new_x = xCursor + 1;//- 1;
+				new_y = yCursor;
+			}
+		}
+	  
+	}
+	if(yCursor<4&&comingFrom!=HEADING_DOWN){//look down
+		if(!isObstructed(&array2D(map,yCursor+1,xCursor))){//if the spot that im checking isn't obstructed
+			temp = array2D(map,yCursor+1,xCursor).points;
+			if(temp>max_value){
+				//make this the new spot to go and update max value
+				max_value = temp;
+				direction_to_move = HEADING_DOWN;
+				direction_coming_from = HEADING_UP;
+				new_x = xCursor;
+				new_y = yCursor + 1;
+			}
+		}
+	}
+	return max_value+sumCrawler(direction_coming_from, new_x, new_y, movesLeft-1);
+	
+}
 //finds biggest adjacent cell and goes there
 robot_heading whereToGo(robot_if_t *ri){
-	robot_heading direction_to_move = facing; 
-	int max_value = 0,
+	int spacestosum = 3; //number of spaces to consider in deciding where to move
+	robot_heading direction_to_move = facing;
+	int max_value = 0,//maybe change to -1
 	    temp,
 	    new_x = x,
 	    new_y = y;
@@ -164,6 +227,8 @@ robot_heading whereToGo(robot_if_t *ri){
 		if(x>0){//look left
 			if(!isObstructed(&array2D(map,y,x-1))){//if the spot that im checking isn't obstructed
 				temp = array2D(map,y,x-1).points;
+				//crawl out here
+				temp += sumCrawler(HEADING_RIGHT, (x - 1), y, (spacestosum-1));
 				if(temp>max_value){
 					//make this the new spot to go and update max value
 					max_value = temp;
@@ -176,6 +241,8 @@ robot_heading whereToGo(robot_if_t *ri){
 		if(y>0){//look up
 			if(!isObstructed(&array2D(map,y-1,x))){//if the spot that im checking isn't obstructed
 				temp = array2D(map,y-1,x).points;
+				//crawl out here
+				temp += sumCrawler(HEADING_DOWN, x, (y-1), (spacestosum-1));
 				if(temp>max_value){
 					//make this the new spot to go and update max value
 					max_value = temp;
@@ -189,6 +256,8 @@ robot_heading whereToGo(robot_if_t *ri){
 		if(x<6){//look right
 			if(!isObstructed(&array2D(map,y,x+1))){//if the spot that im checking isn't obstructed
 				temp = array2D(map,y,x+1).points;
+				//crawl out here
+				temp += sumCrawler(HEADING_LEFT, (x+1), y, (spacestosum-1));
 				if(temp>max_value){
 					//make this the new spot to go and update max value
 					max_value = temp;
@@ -202,6 +271,8 @@ robot_heading whereToGo(robot_if_t *ri){
 		if(y<4){//look down
 			if(!isObstructed(&array2D(map,y+1,x))){//if the spot that im checking isn't obstructed
 				temp = array2D(map,y+1,x).points;
+				//crawl out here
+				temp += sumCrawler(HEADING_UP, x, (y+1), (spacestosum-1));
 				if(temp>max_value){
 					//make this the new spot to go and update max value
 					max_value = temp;
@@ -211,8 +282,8 @@ robot_heading whereToGo(robot_if_t *ri){
 				}
 			}
 		}
-		
 	} while(ri_reserve_map(ri, new_x, new_y) == 0);  // try to reserve the square you want to move to
+	printf("max sum = %d, heading = %d\n", max_value, direction_to_move);//diagnostic
 	
 	return direction_to_move;
 }
