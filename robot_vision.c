@@ -493,7 +493,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 	 */
 	i = 0;  /* now going to use i to count the times we strafe */
 	
-	pointTo:
+	/*pointTo:
 		while (state != hasTwoPair){
 			//)getc(stdin;
 			printf("In pointTo State!\n");
@@ -645,28 +645,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 					x_dist_diff = get_diff_in_x(square_list, square_list->next, image);
 					//the direction of the robot that's facing is pretty much centered, now center it's position
 					if (x_dist_diff < 50 && x_dist_diff > -50) break;
-					/*else{
-						if (last_turn_dir == 1){
-							printf("Facing the wall. Strafe right at speed = 3\n");
-							ri_move(ri, RI_MOVE_RIGHT, 3);
-							ri_move(ri, RI_STOP, 10);
-						}
-						else{
-							printf("Facing the wall. Strafe left at speed = 3\n");
-							ri_move(ri, RI_MOVE_LEFT, 3);
-							ri_move(ri, RI_STOP, 10);
-						}
-					}*/
-					/*if (x_dist_diff < -60){
-						printf("Facing the wall. Strafe left at speed = 3\n");
-						ri_move(ri, RI_MOVE_LEFT, 3);
-						ri_move(ri, RI_STOP, 10);
-					}
-					else if (x_dist_diff > 60){
-						printf("Facing the wall. Strafe right at speed = 3\n");
-						ri_move(ri, RI_MOVE_RIGHT, 3);
-						ri_move(ri, RI_STOP, 10);
-					}*/
+					
 					//else break;
 					single_pair_count++;
 				}
@@ -749,7 +728,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 	}
 	
 	// put head down for future movement 
-	ri_move(ri, RI_HEAD_DOWN, RI_FASTEST);
+	ri_move(ri, RI_HEAD_DOWN, RI_FASTEST);*/
 }
 
 /*
