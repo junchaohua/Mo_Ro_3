@@ -61,7 +61,7 @@ int pairsToExpect(robot_heading heading, robot_heading direction_to_move){
 }
 
 int isObstructed(array_map_obj_t *cell){
-	if(robotID == 0){
+	if(robotID == 0){//0==2
 	      if((cell->type == MAP_OBJ_EMPTY)||
 		(cell->type == MAP_OBJ_RESERVE_1)||
 		(cell->type == MAP_OBJ_PELLET))
@@ -81,7 +81,7 @@ int isObstructed(array_map_obj_t *cell){
 
 //doesn't use backward right now
 void makeAMove(robot_if_t *ri){//fill in outline comments
-	robot_heading 	where_to_go = whereToGo(ri);
+	robot_heading where_to_go = whereToGo(ri);
 	
 	if(facing != where_to_go){//point the robot in the direction its moving
 		if((facing==HEADING_UP)&&(where_to_go==HEADING_DOWN)){
@@ -134,16 +134,21 @@ void makeAMove(robot_if_t *ri){//fill in outline comments
 	}
 	
 	if(facing == HEADING_UP){//update heading
+		//printf("facing UP\n");//diagnostic
 		y--;
 	}else if(facing == HEADING_DOWN){
+		//printf("facing DOWN\n");//diagnostic
 		y++;
 	}else if(facing == HEADING_LEFT){
+		//printf("facing LEFT\n");//diagnostic
 		x--;
 	}else if(facing == HEADING_RIGHT){
+		//printf("facing RIGHT\n");//diagnostic
 		x++;
 	}
 	
 	// update map
+	//printf("updating map with x = %d and y = %d\n", x, y);//diagnostic
 	ri_update_map(ri, x, y);
 }
 
@@ -164,7 +169,7 @@ robot_heading whereToGo(robot_if_t *ri){
 					//make this the new spot to go and update max value
 					max_value = temp;
 					direction_to_move = HEADING_LEFT;
-					new_x = x + 1;
+					new_x = x - 1;//+ 1;
 					new_y = y;
 				}
 			}
@@ -189,7 +194,7 @@ robot_heading whereToGo(robot_if_t *ri){
 					//make this the new spot to go and update max value
 					max_value = temp;
 					direction_to_move = HEADING_RIGHT;
-					new_x = x - 1;
+					new_x = x + 1;//- 1;
 					new_y = y;
 				}
 			}
@@ -270,10 +275,12 @@ int main(int argv, char **argc) {
         if(robotID == 1){//set up initial position
 	    y = 2;
 	    x = 0;
+	    facing = HEADING_RIGHT;
 	}
 	else {
 	    y = 2;
 	    x = 6;
+	    facing = HEADING_LEFT;
 	}
 	
 	// run the game until score is >= 25 so you can make some reservations and moves
