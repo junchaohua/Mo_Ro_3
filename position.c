@@ -179,17 +179,15 @@ void init_pos(robot_if_t *ri){
 /* Use this function when a specific move is completed to reset wheel encoders and set up NS transforms
  * with reference to current position as origin.  Absolute postion is stored in last and will be added to
  * future kalman filter data */
-void update_pos(robot_if_t *ri){
+void update_pos(robot_if_t *ri, float new_we_theta){
 	// Copy current into last	
 	copy_stance(current, last);
 	
 	// Reset Wheel Encoders
 	ri_reset_state(ri);
 	
-	// Flush filters
-	//filter_flush(ri);
+	current->weTranslated->v[2] = new_we_theta;
 	
-	//setup_NS_transforms(current->ns_f);
 	setup_WE_transforms(current->weTranslated );
 	
 	/* reset room switch if it was used */

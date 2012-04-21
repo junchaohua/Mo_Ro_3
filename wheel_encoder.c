@@ -115,11 +115,11 @@ void transform_WE(we_stance *s, vector *ws){
 	working_vector.v[1] = get_we_Y(s);
 	working_vector.v[2] = theta;
 	
-	// add result to shift vector, put results in reporting vector ws 
-	AddVectors(we_shift_vector, &working_vector ,&result);
-	
 	// rotate current vector 
-	MultMatVec(we_rot_matrix, &result, ws);	
+	MultMatVec(we_rot_matrix, &working_vector, &result);
+	
+	// add result to shift vector, put results in reporting vector ws 
+	AddVectors(we_shift_vector, &result , ws);
 }
 
 // set up a waypoint for wheel encoder at turn location 

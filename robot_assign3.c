@@ -287,7 +287,8 @@ void go_to_position(robot_if_t *ri, IplImage *image,  float end_x, float end_y, 
 
 /* Print out a menu of selections */
 int printmenu(){
-	int input = -1;
+	int input = -1,
+	    ch;
 	
 	printf("What would you like to do?\n");
 	printf("\t0. Quit.\n");
@@ -298,8 +299,10 @@ int printmenu(){
 	printf("\t5. Just Center.\n");
 	printf("\t6. Center with one pair when facing the wall.\n");
 	
+	while ((ch = getchar()) != '\n' && ch != EOF);
+	
 	while(input < 0 || input > 6) {
-		printf("Please choose a command (0 - 6):\t");
+		printf("Please choose a command (0 - 6): ");
 		input = getc(stdin) - '0';
 		printf("\n");
 	}
@@ -319,7 +322,7 @@ int main(int argv, char **argc) {
 
 	// Make sure we have a valid command line argument
 	if(argv <= 2) {
-		printf("Usage: robot_test <address of robot>, argc[2]: 0 = right to left, 1 = left to right\n");	
+		printf("Usage: robot_test <address of robot>, argc[2]: 0 = BOT 2 start position, 1 = BOT 1 start position\n");	
 		exit(-1);
 	}
 
@@ -340,8 +343,8 @@ int main(int argv, char **argc) {
 		exit(-1);
 	}
 	
-	if(ri_getHeadPosition(&ri) != RI_ROBOT_HEAD_LOW ) ri_move(&ri, RI_HEAD_DOWN , 1);	
-
+	if(ri_getHeadPosition(&ri) != RI_ROBOT_HEAD_LOW ) ri_move(&ri, RI_HEAD_DOWN , 1);
+	
 	loc = (vector *)calloc(1, sizeof(vector));
 	vel = (vector *)calloc(1, sizeof(vector));
 	
@@ -349,10 +352,11 @@ int main(int argv, char **argc) {
 	loc->v[1] = 0;
 	if(atoi(argc[2]) == 0)	loc->v[2] = 0.0;
 	else 			loc->v[2] = M_PI;
+	direction = loc->v[2];
 	
 	vel->v[0] = 0;
 	vel->v[1] = 0;
-	vel->v[2] = 0;
+	vel->v[2] = M_PI/4.0;
 
 	// Create an image to store the image from the camera
 	image = cvCreateImage(cvSize(640, 480), IPL_DEPTH_8U, 3);
@@ -374,46 +378,78 @@ int main(int argv, char **argc) {
 	flag = printmenu();
 	
 	while(flag != 0) {
-		if(loc->v[2] >= 0.0) 	direction = loc->v[2];
-		else			direction = M_PI + loc->v[2];
-		
+		//if(loc->v[2] >= 0.0) 	direction = loc->v[2];
+		//else			direction = M_PI + loc->v[2];
+				
 		switch(flag) {
 			case 1:
 			{
 				printf("Going ahead 65cm!\n\n");
-				if(loc->v[2] <= M_PI/4.0 || loc->v[2] > 7.0*M_PI/4.0) 
-					go_to_position(&ri, image, loc->v[0] + 65.0, loc->v[1] + 0.0, loc);
-				else if(loc->v[2] > M_PI/4.0 && loc->v[2] <= 3.0*M_PI/4.0)
-					go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] - 65.0, loc);
-				else if(loc->v[2] > 3.0*M_PI/4.0 && loc->v[2] <= 5.0*M_PI/4.0)
-					go_to_position(&ri, image, loc->v[0] - 65.0, loc->v[1] + 0.0, loc);
-				else if(loc->v[2] > 5.0*M_PI/4.0 && loc->v[2] <= 7.0*M_PI/4.0)
-					go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] + 65.0, loc);
+				// + X 
+				if(fabs(direction) <= M_PI/4.0 || fabs(direction) > 7.0*M_PI/4.0) {
+								go_to_position(&ri, image, loc->v[0] + 65.0, loc->v[1] + 0.0, loc);
+				}
+				// + Y
+				else if(fabs(direction) > M_PI/4.0 && fabs(direction) <= 3.0*M_PI/4.0) {
+					if(direction >= 0) 	go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] + 65.0, loc);
+					else 			go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] - 65.0, loc);
+				}
+				// - X
+				else if(fabs(direction) > 3.0*M_PI/4.0 && fabs(direction) <= 5.0*M_PI/4.0) {
+								go_to_position(&ri, image, loc->v[0] - 65.0, loc->v[1] + 0.0, loc);
+				}
+				// - Y
+				else if(fabs(direction) > 5.0*M_PI/4.0 && fabs(direction) <= 7.0*M_PI/4.0){
+					if(direction >= 0) 	go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] - 65.0, loc);
+					else			go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] + 65.0, loc);
+				}
 				break;
 			}
 			case 2:
 			{
 				printf("Going back 65cm!\n\n");
-				if(loc->v[2] <= M_PI/4.0 || loc->v[2] > 7.0*M_PI/4.0) 
-					go_to_position(&ri, image, loc->v[0] - 65.0, loc->v[1] + 0.0, loc);
-				else if(loc->v[2] > M_PI/4.0 && loc->v[2] <= 3.0*M_PI/4.0)
-					go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] + 65.0, loc);
-				else if(loc->v[2] > 3.0*M_PI/4.0 && loc->v[2] <= 5.0*M_PI/4.0)
-					go_to_position(&ri, image, loc->v[0] + 65.0, loc->v[1] + 0.0, loc);
-				else if(loc->v[2] > 5.0*M_PI/4.0 && loc->v[2] <= 7.0*M_PI/4.0)
-					go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] - 65.0, loc);
+				
+				printf("Going ahead 65cm!\n\n");
+				// + X 
+				if(fabs(direction) <= M_PI/4.0 || fabs(direction) > 7.0*M_PI/4.0) {
+								go_to_position(&ri, image, loc->v[0] - 65.0, loc->v[1] + 0.0, loc);
+				}
+				// + Y
+				else if(fabs(direction) > M_PI/4.0 && fabs(direction) <= 3.0*M_PI/4.0) {
+					if(direction >= 0) 	go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] - 65.0, loc);
+					else 			go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] + 65.0, loc);
+				}
+				// - X
+				else if(fabs(direction) > 3.0*M_PI/4.0 && fabs(direction) <= 5.0*M_PI/4.0) {
+								go_to_position(&ri, image, loc->v[0] + 65.0, loc->v[1] + 0.0, loc);
+				}
+				// - Y
+				else if(fabs(direction) > 5.0*M_PI/4.0 && fabs(direction) <= 7.0*M_PI/4.0){
+					if(direction >= 0) 	go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] + 65.0, loc);
+					else			go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] - 65.0, loc);
+				}
 				break;
 			}
 			case 3:
 			{
 				printf("Turning right 90 degrees.\n");
-				rotate_to_theta(&ri, loc->v[2] - M_PI/2.0, loc);
+				//rotate_to_theta(&ri, direction - M_PI/2.0, loc);
+				ri_move(&ri, RI_TURN_RIGHT, 1);
+				ri_move(&ri, RI_TURN_RIGHT, 2);
+				ri_move(&ri, RI_TURN_RIGHT, 3);
+								
+				direction -= M_PI/2.0;
 				break;
 			}
 			case 4:
 			{	
 				printf("Turning left 90 degrees.\n");
-				rotate_to_theta(&ri, loc->v[2] + M_PI/2.0, loc);
+				//rotate_to_theta(&ri, direction + M_PI/2.0, loc);
+				ri_move(&ri, RI_TURN_LEFT, 1);
+				ri_move(&ri, RI_TURN_LEFT, 2);
+				ri_move(&ri, RI_TURN_LEFT, 3);
+				
+				direction += M_PI/2.0;
 				break;
 			}
 			case 5:
@@ -431,10 +467,13 @@ int main(int argv, char **argc) {
 			default:
 			{
 				break;
-			}			  
+			}
 		}
 		
-		update_pos(&ri);
+		printf("WE Theta Update = %f\n", direction);
+		update_pos(&ri, direction);
+		
+		get_Position(&ri, loc, vel, FORWARD);
 		
 		//flag = printmenu();
 	}

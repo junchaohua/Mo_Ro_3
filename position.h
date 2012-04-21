@@ -52,7 +52,7 @@ void init_pos(robot_if_t *ri);
 int get_Position(robot_if_t *ri, vector *loc, vector *vel, int m_t);
 
 /* clean up positioning after a move is complete */
-void update_pos(robot_if_t *ri);
+void update_pos(robot_if_t *ri, float new_we_theta);
 
 // Function for gathering Northstar data and returning it in vector u 
 int NS_theta_cal(robot_if_t *ri, vector *u);
