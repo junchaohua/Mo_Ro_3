@@ -31,7 +31,6 @@ int getCol(){
 	return x;
 }
 
-
 //how many pairs should I expect in the next cell: will return 0, 1, or 2// call after its faced and moved
 int pairsToExpect(robot_heading heading, robot_heading direction_to_move){
 	int squares_in_front=0;
@@ -63,14 +62,14 @@ int pairsToExpect(robot_heading heading, robot_heading direction_to_move){
 int isObstructed(array_map_obj_t *cell){
 	if(robotID == 0){//0==2
 	      if((cell->type == MAP_OBJ_EMPTY)||
-		(cell->type == MAP_OBJ_RESERVE_1)||
+		(cell->type == MAP_OBJ_RESERVE_2)||
 		(cell->type == MAP_OBJ_PELLET))
 		    return 0;
 	      else
 		    return 1;
 	} else {
 		if((cell->type == MAP_OBJ_EMPTY)||
-		(cell->type == MAP_OBJ_RESERVE_2)||
+		(cell->type == MAP_OBJ_RESERVE_1)||
 		(cell->type == MAP_OBJ_PELLET))
 		    return 0;
 		else
@@ -269,8 +268,8 @@ int main(int argv, char **argc) {
                 exit(-1);
         }
         
-        robotID = (int)strtol ( argc[2], NULL, 0 );	
-        
+        robotID = (int)strtol ( argc[2], NULL, 0 );
+	        
         // IDs based on code Jun wrote for setting up thresholding, should also fit in with your implementation
         if(robotID == 1){//set up initial position
 	    y = 2;
@@ -282,6 +281,8 @@ int main(int argv, char **argc) {
 	    x = 6;
 	    facing = HEADING_LEFT;
 	}
+	
+	printf("Robot ID = %d\tx = %d, y = %d\n", robotID, x, y);
 	
 	// run the game until score is >= 25 so you can make some reservations and moves
 	while(score1 < 25 && score2 < 25 ) {
@@ -316,6 +317,8 @@ int main(int argv, char **argc) {
 		}
 		
 		makeAMove(&ri);
+		
+		getc(stdin);
 		
 	}
         
