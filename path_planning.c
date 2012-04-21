@@ -153,11 +153,11 @@ void makeAMove(robot_if_t *ri){//fill in outline comments
 
 //finds biggest adjacent cell and goes there
 robot_heading whereToGo(robot_if_t *ri){
-	robot_heading direction_to_move; 
+	robot_heading direction_to_move = facing; 
 	int max_value = 0,
 	    temp,
-	    new_x,
-	    new_y;
+	    new_x = x,
+	    new_y = y;
 	
 	// repeat in case the square we want to move to somehow gets reserved before we can reserve it 
 	do {
