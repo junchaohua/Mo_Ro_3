@@ -11,6 +11,7 @@ int 		x,		//current position
 		robotID,// Used to be MINE
 		score1, 
 		score2;
+		//spacestosum;
 array_map_obj_t *map;
 robot_heading	facing;
 
@@ -158,7 +159,7 @@ int sumCrawler(robot_heading comingFrom, int xCursor, int yCursor, int movesLeft
 	}
 	robot_heading direction_to_move, direction_coming_from;// = comingFrom;
 	int new_x, new_y, temp, max_value=-1;
-	if(x>0&&comingFrom!=HEADING_LEFT){//look left
+	if(xCursor>0&&comingFrom!=HEADING_LEFT){//look left
 		if(!isObstructed(&array2D(map,yCursor,xCursor-1))){//if the spot that im checking isn't obstructed
 			temp = array2D(map,yCursor,xCursor-1).points;	
 			if(temp>max_value){
@@ -185,7 +186,7 @@ int sumCrawler(robot_heading comingFrom, int xCursor, int yCursor, int movesLeft
 		}
 	  
 	}
-	if(x<6&&comingFrom!=HEADING_RIGHT){//look right
+	if(xCursor<6&&comingFrom!=HEADING_RIGHT){//look right
 		if(!isObstructed(&array2D(map,yCursor,xCursor+1))){//if the spot that im checking isn't obstructed
 			temp = array2D(map,yCursor,xCursor+1).points;
 			if(temp>max_value){
@@ -294,7 +295,8 @@ robot_heading whereToGo(robot_if_t *ri){
 		if(spacestosum >= 10){
 			break;//get the fuck out
 		}
-	} while(ri_reserve_map(ri, new_x, new_y) == 0);  // try to reserve the square you want to move to
+	} while(max_value==0);  // try to reserve the square you want to move to
+	ri_reserve_map(ri, new_x, new_y) == 0;
 	printf("max sum = %d, heading = %d\n", max_value, direction_to_move);//diagnostic
 	
 	printf("Reserving x = %d\ty=%d.  Direction_to_move = %d\n", new_x, new_y, direction_to_move);
@@ -336,7 +338,7 @@ int main(int argv, char **argc) {
 	score1 = 0;
         score2 = 0;
 	int i, j;
-       
+	//spacestosum = 3;
 	// initialize memory for the GLOBAL variable map
 	map = (array_map_obj_t*) malloc(sizeof(array_map_obj_t) * ROWS * COLS);
 
@@ -370,7 +372,7 @@ int main(int argv, char **argc) {
 	printf("Robot ID = %d\tx = %d, y = %d\n", robotID, x, y);
 	
 	// run the game until score is >= 25 so you can make some reservations and moves
-	while(score1 < 100 && score2 < 100 ) {
+	while(score1 < 110 && score2 < 110 ) {
 	
 		
 		makeAMove(&ri);
