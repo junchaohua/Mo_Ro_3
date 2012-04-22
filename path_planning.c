@@ -10,9 +10,7 @@ int 		x,		//current position
 		y,
 		robotID,// Used to be MINE
 		score1, 
-		score2,
-		firstRun,
-		pointsInMap;
+		score2;
 		//spacestosum;
 array_map_obj_t *map;
 robot_heading	facing;
@@ -307,9 +305,10 @@ tryAgain:
 		if(max_value == 0){//nothing found
 			printf("nothing found within %d spaces.  Incrementing to %d.\n", spacestosum, (spacestosum+1));
 			spacestosum++;//look further out next time
+			continue;
 		}
-		if(spacestosum > 10){
-			exit(0);//get the fuck out
+		if(spacestosum >= 10){
+			break;//get the fuck out
 		}
 	} while(max_value==0);  // try to reserve the square you want to move to
 	
@@ -327,8 +326,7 @@ void get_map_array(array_map_obj_t *map, robot_if_t *ri, int *score1, int *score
 	map_obj_t *map_list,
 		  *map_list_idx;
 	int i, j;
-	if(firstRun==1)
-		pointsInMap = 0;
+	
 	// Get the map from the server and update scores
         map_list = ri_get_map(ri, score1, score2);
 	map_list_idx = map_list;
@@ -337,8 +335,7 @@ void get_map_array(array_map_obj_t *map, robot_if_t *ri, int *score1, int *score
 		for(j = 0; j < COLS; j++) {
 			array2D(map,i,j).type  = map_list_idx->type;
 			array2D(map,i,j).points  = map_list_idx->points;
-			if(firstRun==1)
-				pointsInMap += map_list_idx->points;
+			
 			map_list_idx = map_list_idx->next;
 		}
 	}
@@ -350,9 +347,6 @@ void get_map_array(array_map_obj_t *map, robot_if_t *ri, int *score1, int *score
 		map_list = map_list_idx;
 	}
 	free(map_list);
-	if(firstRun==1)
-		printf("%d points in map", pointsInMap);//diagnostic
-	firstRun = 0;
 }
 
 
@@ -360,7 +354,6 @@ int main(int argv, char **argc) {
         robot_if_t ri;
 	score1 = 0;
         score2 = 0;
-	firstRun = 1;
 	int i, j;
 	//spacestosum = 3;
 	// initialize memory for the GLOBAL variable map
@@ -396,7 +389,7 @@ int main(int argv, char **argc) {
 	printf("Robot ID = %d\tx = %d, y = %d\n", robotID, x, y);
 	
 	// run the game until score is >= 25 so you can make some reservations and moves
-	while((score1 < (pointsInMap+2)/2) && (score2 < (pointsInMap+2)/2)) {
+	while(score1 < 144 && score2 < 144 ) {
 	
 		
 		makeAMove(&ri);
@@ -426,10 +419,7 @@ int main(int argv, char **argc) {
 			printf("\n");
 		}
 		
-		
-		
-		getc(stdin);
-		
+		//getc(stdin);
 	}
         
 	free(map);
