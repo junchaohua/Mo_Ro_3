@@ -29,9 +29,9 @@ typedef struct _array_map_obj_t_{
 int getRow();
 int getCol();
 int pairsToExpect(robot_heading heading, robot_heading direction_to_move);
-int isObstructed(array_map_obj_t *cell);
+int isObstructed(int cell_type);
 void makeAMove(robot_if_t *ri);
 robot_heading whereToGo(robot_if_t *ri);
-void updateMap(array_map_obj_t *map, robot_if_t *ri, int *score1, int *score2);
+void get_map_array(array_map_obj_t *map, robot_if_t *ri, int *score1, int *score2);
 
 #endif

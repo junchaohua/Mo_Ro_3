@@ -62,18 +62,18 @@ int pairsToExpect(robot_heading heading, robot_heading direction_to_move){
 	}
 }
 
-int isObstructed(array_map_obj_t *cell){
+int isObstructed(int cell_type){
 	if(robotID == 0){//0==2
-	      if((cell->type == MAP_OBJ_EMPTY)||
-		(cell->type == MAP_OBJ_RESERVE_2)||
-		(cell->type == MAP_OBJ_PELLET))
+	      if((cell_type == MAP_OBJ_EMPTY)||
+		(cell_type == MAP_OBJ_RESERVE_2)||
+		(cell_type == MAP_OBJ_PELLET))
 		    return 0;
 	      else
 		    return 1;
 	} else {
-		if((cell->type == MAP_OBJ_EMPTY)||
-		(cell->type == MAP_OBJ_RESERVE_1)||
-		(cell->type == MAP_OBJ_PELLET))
+		if((cell_type == MAP_OBJ_EMPTY)||
+		(cell_type == MAP_OBJ_RESERVE_1)||
+		(cell_type == MAP_OBJ_PELLET))
 		    return 0;
 		else
 		    return 1;
@@ -157,10 +157,17 @@ int sumCrawler(robot_heading comingFrom, int xCursor, int yCursor, int movesLeft
 	if(movesLeft==0){//base case
 	    return 0;
 	}
-	robot_heading direction_to_move, direction_coming_from;// = comingFrom;
-	int new_x, new_y, temp, max_value=-1;
-	if(xCursor>0&&comingFrom!=HEADING_LEFT){//look left
-		if(!isObstructed(&array2D(map,yCursor,xCursor-1))){//if the spot that im checking isn't obstructed
+	
+	robot_heading	direction_to_move, 
+			direction_coming_from = comingFrom;
+	
+	int new_x = xCursor, 
+	    new_y = yCursor, 
+	    temp, 
+	    max_value=-1;
+	
+	if(xCursor > 0 && comingFrom != HEADING_LEFT){//look left
+		if(!isObstructed(array2D(map,yCursor,xCursor-1).type)){//if the spot that im checking isn't obstructed
 			temp = array2D(map,yCursor,xCursor-1).points;	
 			if(temp>max_value){
 				//make this the new spot to go and update max value
@@ -173,7 +180,7 @@ int sumCrawler(robot_heading comingFrom, int xCursor, int yCursor, int movesLeft
 		}
 	}
 	if(yCursor>0&&comingFrom!=HEADING_UP){//look up
-		if(!isObstructed(&array2D(map,yCursor-1,xCursor))){//if the spot that im checking isn't obstructed
+		if(!isObstructed(array2D(map,yCursor-1,xCursor).type)){//if the spot that im checking isn't obstructed
 			temp = array2D(map,yCursor-1,xCursor).points;
 			if(temp>max_value){
 				//make this the new spot to go and update max value
@@ -187,7 +194,7 @@ int sumCrawler(robot_heading comingFrom, int xCursor, int yCursor, int movesLeft
 	  
 	}
 	if(xCursor<6&&comingFrom!=HEADING_RIGHT){//look right
-		if(!isObstructed(&array2D(map,yCursor,xCursor+1))){//if the spot that im checking isn't obstructed
+		if(!isObstructed(array2D(map,yCursor,xCursor+1).type)){//if the spot that im checking isn't obstructed
 			temp = array2D(map,yCursor,xCursor+1).points;
 			if(temp>max_value){
 				//make this the new spot to go and update max value
@@ -201,7 +208,7 @@ int sumCrawler(robot_heading comingFrom, int xCursor, int yCursor, int movesLeft
 	  
 	}
 	if(yCursor<4&&comingFrom!=HEADING_DOWN){//look down
-		if(!isObstructed(&array2D(map,yCursor+1,xCursor))){//if the spot that im checking isn't obstructed
+		if(!isObstructed(array2D(map,yCursor+1,xCursor).type)){//if the spot that im checking isn't obstructed
 			temp = array2D(map,yCursor+1,xCursor).points;
 			if(temp>max_value){
 				//make this the new spot to go and update max value
@@ -213,7 +220,7 @@ int sumCrawler(robot_heading comingFrom, int xCursor, int yCursor, int movesLeft
 			}
 		}
 	}
-	return max_value+sumCrawler(direction_coming_from, new_x, new_y, movesLeft-1);
+	return max_value + sumCrawler(direction_coming_from, new_x, new_y, movesLeft-1);
 	
 }
 //finds biggest adjacent cell and goes there
@@ -230,7 +237,7 @@ robot_heading whereToGo(robot_if_t *ri){
 		// update map with functioning API calls
 		updateMap(map, ri, &score1, &score2);
 		if(x>0){//look left
-			if(!isObstructed(&array2D(map,y,x-1))){//if the spot that im checking isn't obstructed
+			if(!isObstructed(array2D(map,y,x-1).type)){//if the spot that im checking isn't obstructed
 				temp = array2D(map,y,x-1).points;
 				//crawl out here
 				temp += sumCrawler(HEADING_RIGHT, (x - 1), y, (spacestosum-1));
@@ -244,7 +251,7 @@ robot_heading whereToGo(robot_if_t *ri){
 			}
 		}
 		if(y>0){//look up
-			if(!isObstructed(&array2D(map,y-1,x))){//if the spot that im checking isn't obstructed
+			if(!isObstructed(array2D(map,y-1,x).type)){//if the spot that im checking isn't obstructed
 				temp = array2D(map,y-1,x).points;
 				//crawl out here
 				temp += sumCrawler(HEADING_DOWN, x, (y-1), (spacestosum-1));
@@ -259,7 +266,7 @@ robot_heading whereToGo(robot_if_t *ri){
 		  
 		}
 		if(x<6){//look right
-			if(!isObstructed(&array2D(map,y,x+1))){//if the spot that im checking isn't obstructed
+			if(!isObstructed(array2D(map,y,x+1).type)){//if the spot that im checking isn't obstructed
 				temp = array2D(map,y,x+1).points;
 				//crawl out here
 				temp += sumCrawler(HEADING_LEFT, (x+1), y, (spacestosum-1));
@@ -274,7 +281,7 @@ robot_heading whereToGo(robot_if_t *ri){
 		  
 		}
 		if(y<4){//look down
-			if(!isObstructed(&array2D(map,y+1,x))){//if the spot that im checking isn't obstructed
+			if(!isObstructed(array2D(map,y+1,x).type)){//if the spot that im checking isn't obstructed
 				temp = array2D(map,y+1,x).points;
 				//crawl out here
 				temp += sumCrawler(HEADING_UP, x, (y+1), (spacestosum-1));
@@ -305,7 +312,7 @@ robot_heading whereToGo(robot_if_t *ri){
 }
 
 /* get map_list from server and put it into map array */
-void updateMap(array_map_obj_t *map, robot_if_t *ri, int *score1, int *score2){
+void get_map_array(array_map_obj_t *map, robot_if_t *ri, int *score1, int *score2){
 	map_obj_t *map_list,
 		  *map_list_idx;
 	int i, j;
