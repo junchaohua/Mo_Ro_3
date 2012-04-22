@@ -147,7 +147,7 @@ void makeAMove(robot_if_t *ri){//fill in outline comments
 	}
 	
 	// update map
-	//printf("updating map with x = %d and y = %d\n", x, y);//diagnostic
+	printf("updating map with x = %d and y = %d\n", x, y);//diagnostic
 	ri_update_map(ri, x, y);
 }
 
@@ -214,6 +214,8 @@ robot_heading whereToGo(robot_if_t *ri){
 		
 	} while(ri_reserve_map(ri, new_x, new_y) == 0);  // try to reserve the square you want to move to
 	
+	printf("Reserving x = %d\ty=%d.  Direction_to_move = %d\n", new_x, new_y, direction_to_move);
+	
 	return direction_to_move;
 }
 
@@ -257,19 +259,19 @@ int main(int argv, char **argc) {
 
         // Make sure we have a valid command line argument
         if(argv <= 2) {
-                printf("Usage: robot_game_example <address of robot> <starting position(0 or 1)\n");
+                printf("Usage: robot_game_example <address of robot> <starting position(1 or 2)\n");
                 exit(-1);
         }
 
+	robotID = (int)strtol ( argc[2], NULL, 0 );
+
         // Setup the robot with the address passed in
         // This robot has been configured to be Robot 1. needs to be flexible. 
-	if(ri_setup(&ri, argc[1], 1)) {
+	if(ri_setup(&ri, argc[1], robotID)) {
                 printf("Failed to setup the robot!\n");
                 exit(-1);
         }
         
-        robotID = (int)strtol ( argc[2], NULL, 0 );
-	        
         // IDs based on code Jun wrote for setting up thresholding, should also fit in with your implementation
         if(robotID == 1){//set up initial position
 	    y = 2;
@@ -285,7 +287,7 @@ int main(int argv, char **argc) {
 	printf("Robot ID = %d\tx = %d, y = %d\n", robotID, x, y);
 	
 	// run the game until score is >= 25 so you can make some reservations and moves
-	while(score1 < 25 && score2 < 25 ) {
+	while(score1 < 100 && score2 < 100 ) {
 	
 		// update map with functioning API calls
 		updateMap(map, &ri, &score1, &score2);
