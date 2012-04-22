@@ -8,7 +8,9 @@
 
 int 		x,		//current position
 		y,
-		robotID;	// Used to be MINE
+		robotID,// Used to be MINE
+		score1, 
+		score2;
 array_map_obj_t *map;
 robot_heading	facing;
 
@@ -224,6 +226,8 @@ robot_heading whereToGo(robot_if_t *ri){
 	
 	// repeat in case the square we want to move to somehow gets reserved before we can reserve it 
 	do {
+		// update map with functioning API calls
+		updateMap(map, ri, &score1, &score2);
 		if(x>0){//look left
 			if(!isObstructed(&array2D(map,y,x-1))){//if the spot that im checking isn't obstructed
 				temp = array2D(map,y,x-1).points;
@@ -282,6 +286,14 @@ robot_heading whereToGo(robot_if_t *ri){
 				}
 			}
 		}
+		if(max_value == 0){//nothing found
+			printf("nothing found within %d spaces.  Incrementing to %d.\n", spacestosum, (spacestosum+1));
+			spacestosum++;//look further out next time
+			continue;
+		}
+		if(spacestosum >= 10){
+			break;//get the fuck out
+		}
 	} while(ri_reserve_map(ri, new_x, new_y) == 0);  // try to reserve the square you want to move to
 	printf("max sum = %d, heading = %d\n", max_value, direction_to_move);//diagnostic
 	
@@ -321,8 +333,8 @@ void updateMap(array_map_obj_t *map, robot_if_t *ri, int *score1, int *score2){
 
 int main(int argv, char **argc) {
         robot_if_t ri;
-	int score1 = 0;
-        int score2 = 0;
+	score1 = 0;
+        score2 = 0;
 	int i, j;
        
 	// initialize memory for the GLOBAL variable map
@@ -360,9 +372,8 @@ int main(int argv, char **argc) {
 	// run the game until score is >= 25 so you can make some reservations and moves
 	while(score1 < 100 && score2 < 100 ) {
 	
-		// update map with functioning API calls
-		updateMap(map, &ri, &score1, &score2);
 		
+		makeAMove(&ri);
 		// print the map
 		printf("Score: %i to %i\n", score1, score2);
 		for(i = 0; i < ROWS; i++) {
@@ -389,7 +400,7 @@ int main(int argv, char **argc) {
 			printf("\n");
 		}
 		
-		makeAMove(&ri);
+		
 		
 		getc(stdin);
 		
