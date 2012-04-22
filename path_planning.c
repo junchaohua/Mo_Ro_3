@@ -225,17 +225,25 @@ int sumCrawler(robot_heading comingFrom, int xCursor, int yCursor, int movesLeft
 }
 //finds biggest adjacent cell and goes there
 robot_heading whereToGo(robot_if_t *ri){
-	int spacestosum = 3; //number of spaces to consider in deciding where to move
-	robot_heading direction_to_move = facing;
-	int max_value = 0,//maybe change to -1
+	robot_heading direction_to_move;
+	int spacestosum,
+	    max_value, 
 	    temp,
-	    new_x = x,
-	    new_y = y;
+	    new_x,
+	    new_y;
 	
+tryAgain:
+	spacestosum = 3; //number of spaces to consider in deciding where to move
+	direction_to_move = facing;
+	max_value = 0;
+	new_x = x;
+	new_y = y;
+
+
 	// repeat in case the square we want to move to somehow gets reserved before we can reserve it 
 	do {
 		// update map with functioning API calls
-		updateMap(map, ri, &score1, &score2);
+		get_map_array(map, ri, &score1, &score2);
 		if(x>0){//look left
 			if(!isObstructed(array2D(map,y,x-1).type)){//if the spot that im checking isn't obstructed
 				temp = array2D(map,y,x-1).points;
@@ -303,7 +311,9 @@ robot_heading whereToGo(robot_if_t *ri){
 			break;//get the fuck out
 		}
 	} while(max_value==0);  // try to reserve the square you want to move to
-	ri_reserve_map(ri, new_x, new_y) == 0;
+	
+	if (ri_reserve_map(ri, new_x, new_y) == 0) goto tryAgain;
+	
 	printf("max sum = %d, heading = %d\n", max_value, direction_to_move);//diagnostic
 	
 	printf("Reserving x = %d\ty=%d.  Direction_to_move = %d\n", new_x, new_y, direction_to_move);
