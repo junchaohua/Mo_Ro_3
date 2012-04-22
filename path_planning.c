@@ -428,7 +428,7 @@ int main(int argv, char **argc) {
 		
 		
 		
-		getc(stdin);
+		//getc(stdin);
 		
 	}
         
