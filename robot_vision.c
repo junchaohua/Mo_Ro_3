@@ -461,6 +461,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 			intersect_x = 0,
 			change_dir = 0,
 			last_largest_x = -1,
+			initial_largest_x = -1,
 			avg_area,
 			last_turn_dir = 0,  //0 = left, 1 = right
 			single_pair_count = 0, //strafe every 10
@@ -504,6 +505,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 				{
 					change_dir = 0;
 					last_largest_x = -1;
+					initial_largest_x = -1;
 					
 					x_dist_diff = get_diff_in_x(square_list, square_list->next, image);
 					
@@ -555,6 +557,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 					//if (flag != 6){
 						change_dir = 0;
 						last_largest_x = -1;
+						initial_largest_x = -1;
 						
 						if (square_list->center.x < square_list->next->center.x){
 							printf("Larger square to left of smaller.  rotate right at speed = 6\n");
@@ -576,13 +579,20 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 				case onlyLargest:
 				{
 					// if this isn't the first time we've seen only largest 
-					if(last_largest_x > -1 && change_dir == 0) {
-						// check to see if square crossed center going left, change direction to right 
-						if(last_largest_x > image->width/2 && square_list->center.x <= image->width/2)
+					if(initial_largest_x > -1 && change_dir == 0) {
+						// check to see if square crossed center going left, change direction to right
+						// check to see if you've moved a third of the screen with only a single square
+						if((square_list->center.x - initial_largest_x) <= -image->width/3)
 							change_dir = 1;
-						// check to see if square crossed center going right, change direction to left 
-						else if(last_largest_x < image->width/2 && square_list->center.x >= image->width/2)
+						// check to see if square crossed center going right, change direction to left
+						// check to see if you've moved a third of the screen with only a single square
+						else if((square_list->center.x - initial_largest_x) >= image->width/3)
 							change_dir = 2;
+						
+						/* YE OLDE CODE
+						if(last_largest_x > image->width/2 && square_list->center.x <= image->width/2)
+						else if(last_largest_x < image->width/2 && square_list->center.x >= image->width/2)
+						*/
 					}
 					
 					if (change_dir == 0) {
@@ -601,7 +611,10 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 							last_turn_dir = 1;
 						} 
 						
-						last_largest_x = square_list->center.x;
+						// grab center of the first onlyLargest you see
+						if(initial_largest_x == -1) initial_largest_x = square_list->center.x;
+						/* more old code */
+						//last_largest_x = square_list->center.x;
 					}
 					else if (change_dir == 1) {  // turn right 
 						printf("You crossed the line rotating left!  Changing to rotate right!\n");
