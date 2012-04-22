@@ -312,7 +312,7 @@ tryAgain:
 		}
 	} while(max_value==0);  // try to reserve the square you want to move to
 	
-	if (ri_reserve_map(ri, new_x, new_y) == 0) goto tryAgain;
+	if (ri_reserve_map(ri, new_x, new_y) != 0) goto tryAgain;
 	
 	printf("max sum = %d, heading = %d\n", max_value, direction_to_move);//diagnostic
 	
@@ -389,7 +389,7 @@ int main(int argv, char **argc) {
 	printf("Robot ID = %d\tx = %d, y = %d\n", robotID, x, y);
 	
 	// run the game until score is >= 25 so you can make some reservations and moves
-	while(score1 < 110 && score2 < 110 ) {
+	while(score1 < 144 && score2 < 144 ) {
 	
 		
 		makeAMove(&ri);
