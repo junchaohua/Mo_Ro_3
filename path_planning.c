@@ -17,25 +17,6 @@ int 		x,		//current position
 array_map_obj_t *map;
 robot_heading	facing;
 
-/*
-int sumCrawler(*map_obj_t backPointer){//helper method for sumPoints
-	//code me plz
-}
-*/
-/*
-int sumPoints(int x, int cellsToCrawl){
-	//code me plz
-}
-*/
-
-int getRow(){
-	return y;
-}
-
-int getCol(){
-	return x;
-}
-
 //how many pairs should I expect in the next cell: will return 0, 1, or 2// call after its faced and moved
 int pairsToExpect(robot_heading heading, robot_heading direction_to_move){
 	int squares_in_front=0;
