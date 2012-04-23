@@ -575,11 +575,11 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, in
 					if(initial_largest_x > -1 && change_dir == 0) {
 						// check to see if square crossed center going left, change direction to right
 						// check to see if you've moved a third of the screen with only a single square
-						if((square_list->center.x - initial_largest_x) <= -image->width/3)
+						if((square_list->center.x - initial_largest_x) <= -image->width/2.0)
 							change_dir = 1;
 						// check to see if square crossed center going right, change direction to left
 						// check to see if you've moved a third of the screen with only a single square
-						else if((square_list->center.x - initial_largest_x) >= image->width/3)
+						else if((square_list->center.x - initial_largest_x) >= image->width/2.0)
 							change_dir = 2;
 						
 						/* YE OLDE CODE
