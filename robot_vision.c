@@ -312,6 +312,7 @@ square_state get_squares(robot_if_t *ri, squares_t *square_list, IplImage *image
 	cvCvtColor(image, hsv, CV_BGR2HSV);
 	
 	/* replace with x and y and heading */
+	//row 4
 	if (y == 4){
 		printf("HSV Threshold: Dark\n");
 		// Pick out the first range of pink color from the image
@@ -321,7 +322,26 @@ square_state get_squares(robot_if_t *ri, squares_t *square_list, IplImage *image
 		cvInRangeS(hsv, RC_PINK_LOW_2_bender2, RC_PINK_HIGH_2_bender2, threshold_2);
 		
 	}
+	//row 0 and columns 0-2 and facing right
 	else if (y == 0 && x >= 0 && x <= 2 && robot_dir == HEADING_RIGHT ){
+		printf("HSV Threshold: Dark\n");
+		// Pick out the first range of pink color from the image
+		cvInRangeS(hsv, RC_PINK_LOW_1_bender2, RC_PINK_HIGH_1_bender2, threshold_1);
+		
+		// Pick out the second range of pink color from the image
+		cvInRangeS(hsv, RC_PINK_LOW_2_bender2, RC_PINK_HIGH_2_bender2, threshold_2);
+	}
+	//column 0 and facing up
+	else if (x == 0 && robot_dir == HEADING_UP){
+		printf("HSV Threshold: Dark\n");
+		// Pick out the first range of pink color from the image
+		cvInRangeS(hsv, RC_PINK_LOW_1_bender2, RC_PINK_HIGH_1_bender2, threshold_1);
+		
+		// Pick out the second range of pink color from the image
+		cvInRangeS(hsv, RC_PINK_LOW_2_bender2, RC_PINK_HIGH_2_bender2, threshold_2);
+	}
+	//column 0, row 0, and facing down
+	else if (x == 0 && y == 0 && robot_dir == HEADING_DOWN){
 		printf("HSV Threshold: Dark\n");
 		// Pick out the first range of pink color from the image
 		cvInRangeS(hsv, RC_PINK_LOW_1_bender2, RC_PINK_HIGH_1_bender2, threshold_1);
