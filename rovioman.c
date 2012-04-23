@@ -5,7 +5,6 @@
  * Purpose: use both image processing and room waypoints to guide the robot through the corrider
  */
 
-
 #include <robot_if.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,22 +33,22 @@
 #define array2D(b,i,j) b[(i)*COLS+(j)]
 
 /* GLOBALS */
-int 		x,		//current position
-			y,
-			robotID,// Used to be MINE
-			score1, 
-			score2,
-			firstRun,
-			pointsInMap;
+int 		x,	//current position
+		y,
+		robotID,
+		score1, 
+		score2,
+		firstRun,
+		pointsInMap;
 float		direction;
 PID 		*fwdPID,
-			*rotPID;
+		*rotPID;
 vector 		*loc,
-			*vel;
+		*vel;
 array_map_obj_t *map;
 robot_heading	facing;
 IplImage	*image, 
-			*final_threshold;
+		*final_threshold;
 
 float fwd_speed[] = {  // Forward speeds in [cm/s]  (Halved in code to compensate for stop / lag in bot )
 	33.94,
@@ -361,111 +360,111 @@ void makeAMove(robot_if_t *ri){//fill in outline comments
 		if((facing==HEADING_UP)&&(where_to_go==HEADING_DOWN)){
 			printf("Turning 180 degrees.\n");
 				
-			ri_move(&ri, RI_TURN_RIGHT, 1);
-			ri_move(&ri, RI_TURN_RIGHT, 2);
-			ri_move(&ri, RI_TURN_RIGHT, 3);
-			ri_move(&ri, RI_TURN_RIGHT, 1);
-			ri_move(&ri, RI_TURN_RIGHT, 2);
-			ri_move(&ri, RI_TURN_RIGHT, 3);
+			ri_move(ri, RI_TURN_RIGHT, 1);
+			ri_move(ri, RI_TURN_RIGHT, 2);
+			ri_move(ri, RI_TURN_RIGHT, 3);
+			ri_move(ri, RI_TURN_RIGHT, 1);
+			ri_move(ri, RI_TURN_RIGHT, 2);
+			ri_move(ri, RI_TURN_RIGHT, 3);
 							
 			direction -= M_PI;
 		}
 		else if((facing==HEADING_LEFT)&&(where_to_go==HEADING_RIGHT)){
 			printf("Turning 180 degrees.\n");
 				
-			ri_move(&ri, RI_TURN_RIGHT, 1);
-			ri_move(&ri, RI_TURN_RIGHT, 2);
-			ri_move(&ri, RI_TURN_RIGHT, 3);
-			ri_move(&ri, RI_TURN_RIGHT, 1);
-			ri_move(&ri, RI_TURN_RIGHT, 2);
-			ri_move(&ri, RI_TURN_RIGHT, 3);
+			ri_move(ri, RI_TURN_RIGHT, 1);
+			ri_move(ri, RI_TURN_RIGHT, 2);
+			ri_move(ri, RI_TURN_RIGHT, 3);
+			ri_move(ri, RI_TURN_RIGHT, 1);
+			ri_move(ri, RI_TURN_RIGHT, 2);
+			ri_move(ri, RI_TURN_RIGHT, 3);
 							
 			direction -= M_PI;
 		}
 		else if((facing==HEADING_RIGHT)&&(where_to_go==HEADING_LEFT)){
 			printf("Turning 180 degrees.\n");
 				
-			ri_move(&ri, RI_TURN_RIGHT, 1);
-			ri_move(&ri, RI_TURN_RIGHT, 2);
-			ri_move(&ri, RI_TURN_RIGHT, 3);
-			ri_move(&ri, RI_TURN_RIGHT, 1);
-			ri_move(&ri, RI_TURN_RIGHT, 2);
-			ri_move(&ri, RI_TURN_RIGHT, 3);
+			ri_move(ri, RI_TURN_RIGHT, 1);
+			ri_move(ri, RI_TURN_RIGHT, 2);
+			ri_move(ri, RI_TURN_RIGHT, 3);
+			ri_move(ri, RI_TURN_RIGHT, 1);
+			ri_move(ri, RI_TURN_RIGHT, 2);
+			ri_move(ri, RI_TURN_RIGHT, 3);
 							
 			direction -= M_PI;
 		}
 		else if((facing==HEADING_DOWN)&&(where_to_go==HEADING_UP)){
 			printf("Turning 180 degrees.\n");
 				
-			ri_move(&ri, RI_TURN_RIGHT, 1);
-			ri_move(&ri, RI_TURN_RIGHT, 2);
-			ri_move(&ri, RI_TURN_RIGHT, 3);
-			ri_move(&ri, RI_TURN_RIGHT, 1);
-			ri_move(&ri, RI_TURN_RIGHT, 2);
-			ri_move(&ri, RI_TURN_RIGHT, 3);
+			ri_move(ri, RI_TURN_RIGHT, 1);
+			ri_move(ri, RI_TURN_RIGHT, 2);
+			ri_move(ri, RI_TURN_RIGHT, 3);
+			ri_move(ri, RI_TURN_RIGHT, 1);
+			ri_move(ri, RI_TURN_RIGHT, 2);
+			ri_move(ri, RI_TURN_RIGHT, 3);
 							
 			direction -= M_PI;
 		}
 		else if((facing==HEADING_DOWN)&&(where_to_go==HEADING_LEFT)){
 			printf("Turning right 90 degrees.\n");
 			//rotate_to_theta(&ri, direction - M_PI/2.0, loc);
-			ri_move(&ri, RI_TURN_RIGHT, 1);
-			ri_move(&ri, RI_TURN_RIGHT, 2);
-			ri_move(&ri, RI_TURN_RIGHT, 3);
+			ri_move(ri, RI_TURN_RIGHT, 1);
+			ri_move(ri, RI_TURN_RIGHT, 2);
+			ri_move(ri, RI_TURN_RIGHT, 3);
 							
 			direction -= M_PI/2.0;
 		}
 		else if((facing==HEADING_LEFT)&&(where_to_go==HEADING_UP)){
 			printf("Turning right 90 degrees.\n");
 			//rotate_to_theta(&ri, direction - M_PI/2.0, loc);
-			ri_move(&ri, RI_TURN_RIGHT, 1);
-			ri_move(&ri, RI_TURN_RIGHT, 2);
-			ri_move(&ri, RI_TURN_RIGHT, 3);
+			ri_move(ri, RI_TURN_RIGHT, 1);
+			ri_move(ri, RI_TURN_RIGHT, 2);
+			ri_move(ri, RI_TURN_RIGHT, 3);
 							
 			direction -= M_PI/2.0;
 		}
 		else if((facing==HEADING_UP)&&(where_to_go==HEADING_RIGHT)){
 			printf("Turning right 90 degrees.\n");
 			//rotate_to_theta(&ri, direction - M_PI/2.0, loc);
-			ri_move(&ri, RI_TURN_RIGHT, 1);
-			ri_move(&ri, RI_TURN_RIGHT, 2);
-			ri_move(&ri, RI_TURN_RIGHT, 3);
+			ri_move(ri, RI_TURN_RIGHT, 1);
+			ri_move(ri, RI_TURN_RIGHT, 2);
+			ri_move(ri, RI_TURN_RIGHT, 3);
 							
 			direction -= M_PI/2.0;
 		}
 		else if((facing==HEADING_RIGHT)&&(where_to_go==HEADING_DOWN)){
 			printf("Turning right 90 degrees.\n");
 			//rotate_to_theta(&ri, direction - M_PI/2.0, loc);
-			ri_move(&ri, RI_TURN_RIGHT, 1);
-			ri_move(&ri, RI_TURN_RIGHT, 2);
-			ri_move(&ri, RI_TURN_RIGHT, 3);
+			ri_move(ri, RI_TURN_RIGHT, 1);
+			ri_move(ri, RI_TURN_RIGHT, 2);
+			ri_move(ri, RI_TURN_RIGHT, 3);
 							
 			direction -= M_PI/2.0;
 		}
 		else if((facing==HEADING_DOWN)&&(where_to_go==HEADING_RIGHT)){
 			printf("Turning left 90 degrees.\n");
 			//rotate_to_theta(&ri, direction + M_PI/2.0, loc);
-			ri_move(&ri, RI_TURN_LEFT, 1);
-			ri_move(&ri, RI_TURN_LEFT, 2);
-			ri_move(&ri, RI_TURN_LEFT, 3);
+			ri_move(ri, RI_TURN_LEFT, 1);
+			ri_move(ri, RI_TURN_LEFT, 2);
+			ri_move(ri, RI_TURN_LEFT, 3);
 			
 			direction += M_PI/2.0;
 		}
 		else if((facing==HEADING_UP)&&(where_to_go==HEADING_LEFT)){
 			printf("Turning left 90 degrees.\n");
 			//rotate_to_theta(&ri, direction + M_PI/2.0, loc);
-			ri_move(&ri, RI_TURN_LEFT, 1);
-			ri_move(&ri, RI_TURN_LEFT, 2);
-			ri_move(&ri, RI_TURN_LEFT, 3);
+			ri_move(ri, RI_TURN_LEFT, 1);
+			ri_move(ri, RI_TURN_LEFT, 2);
+			ri_move(ri, RI_TURN_LEFT, 3);
 			
 			direction += M_PI/2.0;
 		}
 		else if((facing==HEADING_LEFT)&&(where_to_go==HEADING_DOWN)){
 			printf("Turning left 90 degrees.\n");
 			//rotate_to_theta(&ri, direction + M_PI/2.0, loc);
-			ri_move(&ri, RI_TURN_LEFT, 1);
-			ri_move(&ri, RI_TURN_LEFT, 2);
-			ri_move(&ri, RI_TURN_LEFT, 3);
+			ri_move(ri, RI_TURN_LEFT, 1);
+			ri_move(ri, RI_TURN_LEFT, 2);
+			ri_move(ri, RI_TURN_LEFT, 3);
 			
 			direction += M_PI/2.0;
 		}
@@ -473,9 +472,9 @@ void makeAMove(robot_if_t *ri){//fill in outline comments
 			//turn 90 left
 			printf("Turning left 90 degrees.\n");
 			//rotate_to_theta(&ri, direction + M_PI/2.0, loc);
-			ri_move(&ri, RI_TURN_LEFT, 1);
-			ri_move(&ri, RI_TURN_LEFT, 2);
-			ri_move(&ri, RI_TURN_LEFT, 3);
+			ri_move(ri, RI_TURN_LEFT, 1);
+			ri_move(ri, RI_TURN_LEFT, 2);
+			ri_move(ri, RI_TURN_LEFT, 3);
 			
 			direction += M_PI/2.0;
 		}
@@ -486,36 +485,25 @@ void makeAMove(robot_if_t *ri){//fill in outline comments
 	printf("Going ahead 65cm!\n\n");
 	// + X 
 	if(fabs(direction) <= M_PI/4.0 || fabs(direction) > 7.0*M_PI/4.0) {
-					go_to_position(&ri, image, loc->v[0] + 65.0, loc->v[1] + 0.0, loc);
+					go_to_position(ri, image, loc->v[0] + 65.0, loc->v[1] + 0.0, loc);
 	}
 	// + Y
 	else if(fabs(direction) > M_PI/4.0 && fabs(direction) <= 3.0*M_PI/4.0) {
-		if(direction >= 0) 	go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] + 65.0, loc);
-		else 			go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] - 65.0, loc);
+		if(direction >= 0) 	go_to_position(ri, image, loc->v[0] + 0.0, loc->v[1] + 65.0, loc);
+		else 			go_to_position(ri, image, loc->v[0] + 0.0, loc->v[1] - 65.0, loc);
 	}
 	// - X
 	else if(fabs(direction) > 3.0*M_PI/4.0 && fabs(direction) <= 5.0*M_PI/4.0) {
-					go_to_position(&ri, image, loc->v[0] - 65.0, loc->v[1] + 0.0, loc);
+					go_to_position(ri, image, loc->v[0] - 65.0, loc->v[1] + 0.0, loc);
 	}
 	// - Y
 	else if(fabs(direction) > 5.0*M_PI/4.0 && fabs(direction) <= 7.0*M_PI/4.0){
-		if(direction >= 0) 	go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] - 65.0, loc);
-		else			go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] + 65.0, loc);
+		if(direction >= 0) 	go_to_position(ri, image, loc->v[0] + 0.0, loc->v[1] - 65.0, loc);
+		else			go_to_position(ri, image, loc->v[0] + 0.0, loc->v[1] + 65.0, loc);
 	}
 	
-	// center
-	if(pairsToExpect(facing, where_to_go)==2){
-	    //center with 2 pairs;
-		printf("Centering expecting TWO Pairs!\n\n");
-		center_robot(&ri, image, final_threshold, argc[1], atoi(argc[2]), flag);
-	}
-	if(pairsToExpect(facing, where_to_go)==1){
-	      //center with 1 pair;
-		  printf("Centering expecting ONE Pair!\n\n");
-		  center_robot(&ri, image, final_threshold, argc[1],atoi(argc[2]), flag);
-	}
-	
-	if(facing == HEADING_UP){//update heading
+	//update heading
+	if(facing == HEADING_UP){
 		//printf("facing UP\n");//diagnostic
 		y--;
 	}else if(facing == HEADING_DOWN){
@@ -527,6 +515,18 @@ void makeAMove(robot_if_t *ri){//fill in outline comments
 	}else if(facing == HEADING_RIGHT){
 		//printf("facing RIGHT\n");//diagnostic
 		x++;
+	}
+	
+	// center
+	if(pairsToExpect(facing, where_to_go)==2){
+		//center with 2 pairs;
+		printf("Centering expecting TWO Pairs!\n\n");
+		center_robot(ri, image, final_threshold, x, y, facing, 4); // 4 matches old center with 2 pair squares option
+	}
+	if(pairsToExpect(facing, where_to_go)==1){
+		//center with 1 pair;
+		printf("Centering expecting ONE Pair!\n\n");
+		center_robot(ri, image, final_threshold, x, y, facing, 5); // 5 matches old center with 1 pair squares option
 	}
 	
 	// update map

@@ -274,7 +274,8 @@ void printAreas(squares_t *squares) {
 }
 
 /* Find squres in the thresholded image, sort the list returned, and identify best state in list */
-square_state get_squares(robot_if_t *ri, squares_t *square_list, IplImage *image, IplImage *final_threshold, float *slope_diff, char *bot_name, int robot_dir) {
+square_state get_squares(robot_if_t *ri, squares_t *square_list, IplImage *image, IplImage *final_threshold, 
+			 float *slope_diff, int x, int y, int robot_dir) {
 	IplImage	*hsv = NULL, 
 			*threshold_1 = NULL, 
 			*threshold_2 = NULL;
@@ -309,31 +310,25 @@ square_state get_squares(robot_if_t *ri, squares_t *square_list, IplImage *image
 	
 	// Convert the image from RGB to HSV
 	cvCvtColor(image, hsv, CV_BGR2HSV);
-
+	
+	/* replace with x and y 
 	//when gort has been used
-	if (strcmp(bot_name, "gort") == 0){
+	if (robot_dir == 0){
 		// Pick out the first range of pink color from the image
-		cvInRangeS(hsv, RC_PINK_LOW_1_gort, RC_PINK_HIGH_1_gort, threshold_1);
-		
+		cvInRangeS(hsv, RC_PINK_LOW_1_bender, RC_PINK_HIGH_1_bender, threshold_1);
+			
 		// Pick out the second range of pink color from the image
-		cvInRangeS(hsv, RC_PINK_LOW_2_gort, RC_PINK_HIGH_2_gort, threshold_2);
+		cvInRangeS(hsv, RC_PINK_LOW_2_bender, RC_PINK_HIGH_2_bender, threshold_2);
 	}
 	else{
-		if (robot_dir == 0){
-			// Pick out the first range of pink color from the image
-			cvInRangeS(hsv, RC_PINK_LOW_1_bender, RC_PINK_HIGH_1_bender, threshold_1);
-			
-			// Pick out the second range of pink color from the image
-			cvInRangeS(hsv, RC_PINK_LOW_2_bender, RC_PINK_HIGH_2_bender, threshold_2);
-		}
-		else{
-			// Pick out the first range of pink color from the image
-			cvInRangeS(hsv, RC_PINK_LOW_1_bender2, RC_PINK_HIGH_1_bender2, threshold_1);
-			
-			// Pick out the second range of pink color from the image
-			cvInRangeS(hsv, RC_PINK_LOW_2_bender2, RC_PINK_HIGH_2_bender2, threshold_2);
-		}
+		// Pick out the first range of pink color from the image
+		cvInRangeS(hsv, RC_PINK_LOW_1_bender2, RC_PINK_HIGH_1_bender2, threshold_1);
+		
+		// Pick out the second range of pink color from the image
+		cvInRangeS(hsv, RC_PINK_LOW_2_bender2, RC_PINK_HIGH_2_bender2, threshold_2);
 	}
+	*/
+	
 	
 	// compute the final threshold image by using cvOr
 	cvOr(threshold_1, threshold_2, final_threshold, NULL);
@@ -456,7 +451,7 @@ square_state get_squares(robot_if_t *ri, squares_t *square_list, IplImage *image
 }
 
 //try to center the robot
-void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, char *bot_name, int robot_dir, int flag){
+void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, int x, int y, robot_heading robot_dir, int flag){
 	int 		x_dist_diff,
 			intersect_x = 0,
 			change_dir = 0,
@@ -486,7 +481,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 	}
 	
 	//find the squares list
-	state = get_squares(ri, square_list, image, final_threshold, &slope_diff, bot_name, robot_dir);
+	state = get_squares(ri, square_list, image, final_threshold, &slope_diff, x, y, robot_dir);
 		
 	/* State machine
 	 * 1. pointTo:  Point to Center (find pairs)
@@ -512,7 +507,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 					//rotate to the left
 					if (x_dist_diff < 0){
 						//don't roate
-						if (flag == 6 && x_dist_diff > -50) break;
+						if (flag == 5 && x_dist_diff > -50) break;
 					
 						printf("Has pair.  Diff < 0.  rotate left at speed = 5\n");
 						ri_move(ri, RI_TURN_LEFT, 5);
@@ -532,7 +527,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 					//rotate to the right
 					else if (x_dist_diff > 0){
 						//don't roate
-						if (flag == 6 && x_dist_diff < 50) break;
+						if (flag == 5 && x_dist_diff < 50) break;
 						printf("Has pair.  Diff > 0.  rotate right at speed = 5\n");
 						ri_move(ri, RI_TURN_RIGHT, 5);
 						ri_move(ri, RI_STOP, 10);
@@ -554,7 +549,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 				case twoLargest:
 				{	
 					//do not handle rotation with two largest squares, when the bot is facing the wall
-					//if (flag != 6){
+					//if (flag != 5){
 						change_dir = 0;
 						last_largest_x = -1;
 						initial_largest_x = -1;
@@ -653,8 +648,8 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 				}
 			}
 			// Center with one pair when facing the wall
-			if (flag == 6){
-				state = get_squares(ri, square_list, image, final_threshold, &slope_diff, bot_name,robot_dir);
+			if (flag == 5){
+				state = get_squares(ri, square_list, image, final_threshold, &slope_diff, x, y, robot_dir);
 				
 				if (state == hasOnePair){
 					x_dist_diff = get_diff_in_x(square_list, square_list->next, image);
@@ -666,12 +661,12 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 				}
 			}
 			//find the squares list
-			state = get_squares(ri, square_list, image, final_threshold, &slope_diff, bot_name,robot_dir);
+			state = get_squares(ri, square_list, image, final_threshold, &slope_diff, x, y, robot_dir);
 			intersect_x = 0;	
 		}
 		
 	// strafeTo:
-		while((slope_diff > tol || slope_diff < -tol) && flag == 5) {
+		while((slope_diff > tol || slope_diff < -tol) && flag == 4) {
 		  	printf("In strafeTo State!\n");
 			i++;
 			
@@ -694,7 +689,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 			}
 			
 			//find the squares list
-			state = get_squares(ri, square_list, image, final_threshold, &slope_diff, bot_name,robot_dir);
+			state = get_squares(ri, square_list, image, final_threshold, &slope_diff, x, y, robot_dir);
 		
 			if (state != hasTwoPair) goto pointTo;
 		}
@@ -709,7 +704,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 			printf("Average area = %d\n", avg_area);
 			if(avg_area < 1428) {
 				printf("Too far back.  Moving forwards.\n");
-				if (flag == 6){
+				if (flag == 5){
 					ri_move(ri, RI_MOVE_FORWARD, 9);
 					//ri_move(ri, RI_STOP, 10);
 				}
@@ -718,7 +713,7 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 			}
 			else if(avg_area > 1572) {
 				printf("Too far forward.  Moving backwards.\n");
-				if (flag == 6){
+				if (flag == 5){
 					ri_move(ri, RI_MOVE_BACKWARD, 9);
 					//ri_move(ri, RI_STOP, 10);
 				}
@@ -730,9 +725,9 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, ch
 			avg_area = get_pair_average_area(square_list, square_list->next);
 			
 			//find the squares list
-			state = get_squares(ri, square_list, image, final_threshold, &slope_diff, bot_name,robot_dir);
+			state = get_squares(ri, square_list, image, final_threshold, &slope_diff, x, y, robot_dir);
 			
-			if (state != hasTwoPair && flag == 5) goto pointTo;
+			if (state != hasTwoPair && flag == 4) goto pointTo;
 		}
 	
 	// Release the square list data
