@@ -2,7 +2,7 @@ CFLAGS=-ggdb -g3 -Wall
 LIB_FLAGS=-L. -lrobot_if
 LIB_LINK=-lhighgui -lcv -lcxcore -lm -lgslcblas -L/usr/lib64/atlas -lclapack -lrt
 
-PROGS=robot cal pathfinding rovioman
+PROGS= cal pathfinding rovioman
 
 all: ${PROGS}
 
@@ -14,9 +14,6 @@ pathfinding: path_planning.o
 
 cal: theta_cal.o northstar.o wheel_encoder.o filter.o position.o
 	gcc ${CFLAGS} -o cal theta_cal.o position.o northstar.o wheel_encoder.o filter.o matvec.o rovioKalmanFilter.o ${LIB_FLAGS} ${LIB_LINK}
-
-robot: robot_assign3.o northstar.o wheel_encoder.o filter.o position.o rovioKalmanFilter.o PID_Control.o robot_vision.o
-	gcc ${CFLAGS} -o robot robot_assign3.o position.o northstar.o wheel_encoder.o filter.o matvec.o rovioKalmanFilter.o PID_Control.o robot_vision.o  ${LIB_FLAGS} ${LIB_LINK}
 
 path_planning.o: path_planning.c path_planning.h
 	gcc ${CFLAGS} -c path_planning.c ${LIB_FLAGS}
@@ -30,9 +27,6 @@ theta_cal.o: theta_cal.c position.o matvec.o rovioKalmanFilter.o
 rovioman.o: rovioman.c position.o matvec.o path_planning.h
 	gcc ${CFLAGS} -c rovioman.c -lrt
 	
-robot_assign3.o: robot_assign3.c position.o matvec.o
-	gcc ${CFLAGS} -c robot_assign3.c -lrt
-
 position.o: position.c northstar.o wheel_encoder.o matvec.o rovioKalmanFilter.o position.h kalmanFilterDef.h
 	gcc ${CFLAGS} -c position.c
 

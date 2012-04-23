@@ -356,6 +356,8 @@ int isObstructed(int cell_type){
 void makeAMove(robot_if_t *ri){//fill in outline comments
 	robot_heading where_to_go = whereToGo(ri);
 	
+	printf("Where to go = %d\n", where_to_go);
+	
 	if(facing != where_to_go){//point the robot in the direction its moving
 		if((facing==HEADING_UP)&&(where_to_go==HEADING_DOWN)){
 			printf("Turning 180 degrees.\n");
@@ -742,13 +744,13 @@ int main(int argv, char **argc) {
 	image = NULL;
 	final_threshold = NULL;			
 	score1 = 0;
-    score2 = 0;
+	score2 = 0;
 	firstRun = 1;
 	direction = 0.0;
 			
 	// Make sure we have a valid command line argument
 	if(argv <= 2) {
-		printf("Usage: robot_test <address of robot>, argc[2]: 0 = BOT 2 start position, 1 = BOT 1 start position\n");	
+		printf("Usage: robot_test <address of robot>, <starting position(1 or 2)\n");	
 		exit(-1);
 	}
 
@@ -758,7 +760,7 @@ int main(int argv, char **argc) {
 		exit(-1);
 	}
 	
-	if(atoi(argc[2]) != 0 && atoi(argc[2]) != 1){
+	if(atoi(argc[2]) != 1 && atoi(argc[2]) != 2){
 		printf("Usage: robot_game_example <address of robot> <starting position(1 or 2)\n");
 		//printf("argc[2]: 0 = right to left, 1 = left to right\n");	
 		exit(-1);
@@ -820,6 +822,7 @@ int main(int argv, char **argc) {
 	
 	// run the game until score is >= half the total points
 	while((score1 < (pointsInMap+2)/2) && (score2 < (pointsInMap+2)/2)) {
+		
 		
 		makeAMove(&ri);
 		// print the map

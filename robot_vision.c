@@ -311,9 +311,8 @@ square_state get_squares(robot_if_t *ri, squares_t *square_list, IplImage *image
 	// Convert the image from RGB to HSV
 	cvCvtColor(image, hsv, CV_BGR2HSV);
 	
-	/* replace with x and y 
-	//when gort has been used
-	if (robot_dir == 0){
+	/* replace with x and y and heading */
+	if (robot_dir == HEADING_LEFT){
 		// Pick out the first range of pink color from the image
 		cvInRangeS(hsv, RC_PINK_LOW_1_bender, RC_PINK_HIGH_1_bender, threshold_1);
 			
@@ -327,8 +326,6 @@ square_state get_squares(robot_if_t *ri, squares_t *square_list, IplImage *image
 		// Pick out the second range of pink color from the image
 		cvInRangeS(hsv, RC_PINK_LOW_2_bender2, RC_PINK_HIGH_2_bender2, threshold_2);
 	}
-	*/
-	
 	
 	// compute the final threshold image by using cvOr
 	cvOr(threshold_1, threshold_2, final_threshold, NULL);
@@ -740,57 +737,3 @@ void center_robot(robot_if_t *ri, IplImage *image, IplImage *final_threshold, in
 	// put head down for future movement 
 	ri_move(ri, RI_HEAD_DOWN, RI_FASTEST);
 }
-
-/*
-int main(int argv, char **argc) {
-	robot_if_t 	ri;
-	IplImage	*image = NULL, 
-			*final_threshold = NULL;
-	
-	// Make sure we have a valid command line argument
-	if(argv <= 1) {
-		printf("Usage: robot_test <address of robot>\n");	
-		exit(-1);
-	}
-
-	// Setup the robot with the address passed in
-	if(ri_setup(&ri, argc[1], 0)) {
-		printf("Failed to setup the robot!\n");
-		exit(-1);
-	}
-
-	// Setup the camera
-	if(ri_cfg_camera(&ri, RI_CAMERA_DEFAULT_BRIGHTNESS, RI_CAMERA_DEFAULT_CONTRAST, 5, RI_CAMERA_RES_640, RI_CAMERA_QUALITY_MID)) {
-		printf("Failed to configure the camera!\n");
-		exit(-1);
-	}
-
-	// Create a window to display the output
-	cvNamedWindow("Square Display", CV_WINDOW_AUTOSIZE);
-	cvNamedWindow("Thresholded", CV_WINDOW_AUTOSIZE);
-
-	// Create an image to store the image from the camera
-	image = cvCreateImage(cvSize(640, 480), IPL_DEPTH_8U, 3);
-
-	final_threshold = cvCreateImage(cvSize(640, 480), IPL_DEPTH_8U, 1);
-
-	// Action loop
-	do {
-		center_robot(&ri, image, final_threshold, argc[1]);
-		
-		getc(stdin);
-	} while(1);
-
-	// clean up function
-	// Clean up (although we'll never get here...)
-	//cvDestroyWindow("Rovio Camera");
-	cvDestroyWindow("Square Display");
-	cvDestroyWindow("Thresholded");
-	
-	// Free the images
-	cvReleaseImage(&final_threshold);
-	cvReleaseImage(&image);
-
-	return 0;
-}
-*/
