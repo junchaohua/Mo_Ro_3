@@ -159,6 +159,8 @@ void init_pos(robot_if_t *ri, int robotID){
 	//printf("Initial NS_F = ");
 	//print_ns(initial->ns_f);
 	
+	if(rID == 1) initial->weTranslated->v[2] = M_PI;
+	
 	// Setup Northstar and Wheel Encoder Transform matrices based on intial position
 	setup_NS_transforms(initial->ns_f, rID);
 	setup_WE_transforms(initial->weTranslated);  // weTranslated is set to zero during create_stance
