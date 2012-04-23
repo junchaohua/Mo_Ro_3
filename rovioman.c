@@ -24,7 +24,7 @@
 #define R_Ki 0.5
 #define R_Kd 0.20
 
-#define FWD_PID_TOLERANCE  15.0  /*How close should I be to the waypoint before moving onto the next one? */
+#define FWD_PID_TOLERANCE  17.5  /*How close should I be to the waypoint before moving onto the next one? */
 
 #define ROWS 5
 #define COLS 7
@@ -356,7 +356,8 @@ int isObstructed(int cell_type){
 void makeAMove(robot_if_t *ri){//fill in outline comments
 	robot_heading where_to_go = whereToGo(ri);
 	
-	printf("Where to go = %d\n", where_to_go);
+	printf("Current Facing = %d\tWhere to go = %d\n", facing, where_to_go);
+	//getc(stdin);
 	
 	if(facing != where_to_go){//point the robot in the direction its moving
 		if((facing==HEADING_UP)&&(where_to_go==HEADING_DOWN)){
@@ -480,7 +481,20 @@ void makeAMove(robot_if_t *ri){//fill in outline comments
 			
 			direction += M_PI/2.0;
 		}
+		
 		facing = where_to_go;//set updated heading
+		
+		// center
+		if(pairsToExpect(facing, where_to_go)==2){
+			//center with 2 pairs;
+			printf("Centering expecting TWO Pairs!\n\n");
+			center_robot(ri, image, final_threshold, x, y, facing, 4); // 4 matches old center with 2 pair squares option
+		}
+		if(pairsToExpect(facing, where_to_go)==1){
+			//center with 1 pair;
+			printf("Centering expecting ONE Pair!\n\n");
+			center_robot(ri, image, final_threshold, x, y, facing, 5); // 5 matches old center with 1 pair squares option
+		}
 	}
 	
 	//move forward 1 space
@@ -615,6 +629,7 @@ robot_heading whereToGo(robot_if_t *ri){
 	    new_y;
 	
 tryAgain:
+	printf("In whereToGo\n");
 	spacestosum = 3; //number of spaces to consider in deciding where to move
 	direction_to_move = facing;
 	max_value = 0;
@@ -693,6 +708,8 @@ tryAgain:
 		}
 	} while(max_value==0);  // try to reserve the square you want to move to
 	
+	printf("Trying to reserve x = %d\ty = %d\n", new_x, new_y);
+	
 	if (ri_reserve_map(ri, new_x, new_y) != 0) goto tryAgain;
 	
 	printf("max sum = %d, heading = %d\n", max_value, direction_to_move);//diagnostic
@@ -747,15 +764,17 @@ int main(int argv, char **argc) {
 	score2 = 0;
 	firstRun = 1;
 	direction = 0.0;
-			
+		
 	// Make sure we have a valid command line argument
 	if(argv <= 2) {
 		printf("Usage: robot_test <address of robot>, <starting position(1 or 2)\n");	
 		exit(-1);
 	}
+	
+	robotID = (int)strtol ( argc[2], NULL, 0 );
 
 	// Setup the robot with the address passed in
-	if(ri_setup(&ri, argc[1], 0)) {
+	if(ri_setup(&ri, argc[1], robotID)) {
 		printf("Failed to setup the robot!\n");
 		exit(-1);
 	}
@@ -766,7 +785,7 @@ int main(int argv, char **argc) {
 		exit(-1);
 	}
 
-	// Setup the camera
+	// Setup the camera  0x1A for bender
 	if(ri_cfg_camera(&ri, RI_CAMERA_DEFAULT_BRIGHTNESS, RI_CAMERA_DEFAULT_CONTRAST, 5, RI_CAMERA_RES_640, RI_CAMERA_QUALITY_HIGH)) {
 		printf("Failed to configure the camera!\n");
 		exit(-1);
@@ -777,8 +796,6 @@ int main(int argv, char **argc) {
 	loc = (vector *)calloc(1, sizeof(vector));
 	vel = (vector *)calloc(1, sizeof(vector));
 	map = (array_map_obj_t*) malloc(sizeof(array_map_obj_t) * ROWS * COLS);
-	
-	robotID = (int)strtol ( argc[2], NULL, 0 );
 	
 	loc->v[0] = 0;
 	loc->v[1] = 0;
@@ -814,6 +831,7 @@ int main(int argv, char **argc) {
 
 	// Retrieve initial position, initailize current and last
 	init_pos(&ri);
+	update_pos(&ri, direction);
 
 	cvNamedWindow("Square Display", CV_WINDOW_AUTOSIZE);
 	cvNamedWindow("Thresholded", CV_WINDOW_AUTOSIZE);
@@ -821,10 +839,10 @@ int main(int argv, char **argc) {
 	printf("Robot ID = %d\tx = %d, y = %d\n", robotID, x, y);
 	
 	// run the game until score is >= half the total points
-	while((score1 < (pointsInMap+2)/2) && (score2 < (pointsInMap+2)/2)) {
-		
+	while((score1 < (pointsInMap+2)/2) && (score2 < (pointsInMap+2)/2)) {		
 		
 		makeAMove(&ri);
+		update_pos(&ri, direction);
 		// print the map
 		printf("Score: %i to %i\n", score1, score2);
 		for(i = 0; i < ROWS; i++) {

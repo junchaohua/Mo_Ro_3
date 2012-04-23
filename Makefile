@@ -25,7 +25,7 @@ theta_cal.o: theta_cal.c position.o matvec.o rovioKalmanFilter.o
 	gcc ${CFLAGS} -c theta_cal.c
 	
 rovioman.o: rovioman.c position.o matvec.o path_planning.h
-	gcc ${CFLAGS} -c rovioman.c -lrt
+	gcc ${CFLAGS} -c rovioman.c
 	
 position.o: position.c northstar.o wheel_encoder.o matvec.o rovioKalmanFilter.o position.h kalmanFilterDef.h
 	gcc ${CFLAGS} -c position.c
