@@ -2,11 +2,14 @@ CFLAGS=-ggdb -g3 -Wall
 LIB_FLAGS=-L. -lrobot_if
 LIB_LINK=-lhighgui -lcv -lcxcore -lm -lgslcblas -L/usr/lib64/atlas -lclapack -lrt
 
-PROGS=robot cal robot_game_example
+PROGS=robot cal pathfinding rovioman
 
 all: ${PROGS}
 
-robot_game_example: path_planning.o
+rovioman: rovioman.o northstar.o wheel_encoder.o filter.o position.o rovioKalmanFilter.o PID_Control.o robot_vision.o
+	gcc ${CFLAGS} -o rovioman rovioman.o position.o northstar.o wheel_encoder.o filter.o matvec.o rovioKalmanFilter.o PID_Control.o robot_vision.o  ${LIB_FLAGS} ${LIB_LINK}
+
+pathfinding: path_planning.o
 	gcc ${CFLAGS} -o robot_game_example path_planning.o ${LIB_FLAGS} ${LIB_LINK}
 
 cal: theta_cal.o northstar.o wheel_encoder.o filter.o position.o
@@ -23,7 +26,10 @@ robot_vision.o: robot_vision.c robot_vision.h robot_color.h
 
 theta_cal.o: theta_cal.c position.o matvec.o rovioKalmanFilter.o
 	gcc ${CFLAGS} -c theta_cal.c
-
+	
+rovioman.o: rovioman.c position.o matvec.o path_planning.h
+	gcc ${CFLAGS} -c rovioman.c -lrt
+	
 robot_assign3.o: robot_assign3.c position.o matvec.o
 	gcc ${CFLAGS} -c robot_assign3.c -lrt
 

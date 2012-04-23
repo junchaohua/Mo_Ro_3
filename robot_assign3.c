@@ -14,6 +14,7 @@
 #include "position.h"
 #include "PID_Control.h"
 #include "robot_vision.h"
+#include "path_planning."
 
 /* DEFINES */
 #define F_Kp 1.0
@@ -26,9 +27,24 @@
 
 #define FWD_PID_TOLERANCE  15.0  /*How close should I be to the waypoint before moving onto the next one? */
 
+#define ROWS 5
+#define COLS 7
+/* USE THIS DEFINE TO ACCESS MAP[i][j] 
+ * ex:	array2D(map,i,j).type */
+#define array2D(b,i,j) b[(i)*COLS+(j)]
+
 /* GLOBALS */
-PID 	*fwdPID,
-	*rotPID;
+int 		x,		//current position
+			y,
+			robotID,// Used to be MINE
+			score1, 
+			score2,
+			firstRun,
+			pointsInMap;
+array_map_obj_t *map;
+robot_heading	facing;
+PID 		*fwdPID,
+			*rotPID;
 
 float fwd_speed[] = {  // Forward speeds in [cm/s]  (Halved in code to compensate for stop / lag in bot )
 	33.94,
@@ -293,15 +309,14 @@ int printmenu(){
 	printf("What would you like to do?\n");
 	printf("\t0. Quit.\n");
 	printf("\t1. Go straight ahead 1 block.\n");
-	printf("\t2. Go backwards 1 block.\n");
-	printf("\t3. Turn right 90 degrees.\n");
-	printf("\t4. Turn left 90 degrees.\n");
-	printf("\t5. Just Center.\n");
-	printf("\t6. Center with one pair when facing the wall.\n");
+	printf("\t2. Turn right 90 degrees.\n");
+	printf("\t3. Turn left 90 degrees.\n");
+	printf("\t4. Just Center.\n");
+	printf("\t5. Center with one pair when facing the wall.\n");
 	
 	while ((ch = getchar()) != '\n' && ch != EOF);
 	
-	while(input < 0 || input > 6) {
+	while(input < 0 || input > 4) {
 		printf("Please choose a command (0 - 6): ");
 		input = getc(stdin) - '0';
 		printf("\n");
@@ -407,31 +422,6 @@ int main(int argv, char **argc) {
 			}
 			case 2:
 			{
-				printf("Going back 65cm!\n\n");
-				
-				printf("Going ahead 65cm!\n\n");
-				// + X 
-				if(fabs(direction) <= M_PI/4.0 || fabs(direction) > 7.0*M_PI/4.0) {
-								go_to_position(&ri, image, loc->v[0] - 65.0, loc->v[1] + 0.0, loc);
-				}
-				// + Y
-				else if(fabs(direction) > M_PI/4.0 && fabs(direction) <= 3.0*M_PI/4.0) {
-					if(direction >= 0) 	go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] - 65.0, loc);
-					else 			go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] + 65.0, loc);
-				}
-				// - X
-				else if(fabs(direction) > 3.0*M_PI/4.0 && fabs(direction) <= 5.0*M_PI/4.0) {
-								go_to_position(&ri, image, loc->v[0] + 65.0, loc->v[1] + 0.0, loc);
-				}
-				// - Y
-				else if(fabs(direction) > 5.0*M_PI/4.0 && fabs(direction) <= 7.0*M_PI/4.0){
-					if(direction >= 0) 	go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] + 65.0, loc);
-					else			go_to_position(&ri, image, loc->v[0] + 0.0, loc->v[1] - 65.0, loc);
-				}
-				break;
-			}
-			case 3:
-			{
 				printf("Turning right 90 degrees.\n");
 				//rotate_to_theta(&ri, direction - M_PI/2.0, loc);
 				ri_move(&ri, RI_TURN_RIGHT, 1);
@@ -441,7 +431,7 @@ int main(int argv, char **argc) {
 				direction -= M_PI/2.0;
 				break;
 			}
-			case 4:
+			case 3:
 			{	
 				printf("Turning left 90 degrees.\n");
 				//rotate_to_theta(&ri, direction + M_PI/2.0, loc);
@@ -452,13 +442,13 @@ int main(int argv, char **argc) {
 				direction += M_PI/2.0;
 				break;
 			}
-			case 5:
+			case 4:
 			{
 				printf("Centering!\n\n");
 				center_robot(&ri, image, final_threshold, argc[1],atoi(argc[2]), flag);
 				break;
 			}
-			case 6:
+			case 5:
 			{
 				printf("Centering with one pair when facing the wall!\n\n");
 				center_robot(&ri, image, final_threshold, argc[1],atoi(argc[2]), flag);
