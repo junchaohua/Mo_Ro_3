@@ -312,19 +312,20 @@ square_state get_squares(robot_if_t *ri, squares_t *square_list, IplImage *image
 	cvCvtColor(image, hsv, CV_BGR2HSV);
 	
 	/* replace with x and y and heading */
-	if (robot_dir == HEADING_LEFT){
-		// Pick out the first range of pink color from the image
-		cvInRangeS(hsv, RC_PINK_LOW_1_bender, RC_PINK_HIGH_1_bender, threshold_1);
-			
-		// Pick out the second range of pink color from the image
-		cvInRangeS(hsv, RC_PINK_LOW_2_bender, RC_PINK_HIGH_2_bender, threshold_2);
-	}
-	else{
+	if (y == 4){
 		// Pick out the first range of pink color from the image
 		cvInRangeS(hsv, RC_PINK_LOW_1_bender2, RC_PINK_HIGH_1_bender2, threshold_1);
 		
 		// Pick out the second range of pink color from the image
 		cvInRangeS(hsv, RC_PINK_LOW_2_bender2, RC_PINK_HIGH_2_bender2, threshold_2);
+		
+	}
+	else{
+		// Pick out the first range of pink color from the image
+		cvInRangeS(hsv, RC_PINK_LOW_1_bender, RC_PINK_HIGH_1_bender, threshold_1);
+			
+		// Pick out the second range of pink color from the image
+		cvInRangeS(hsv, RC_PINK_LOW_2_bender, RC_PINK_HIGH_2_bender, threshold_2);
 	}
 	
 	// compute the final threshold image by using cvOr
