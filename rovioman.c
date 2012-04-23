@@ -836,7 +836,7 @@ int main(int argv, char **argc) {
 	init_PID(rotPID, R_Kp, R_Ki, R_Kd);
 
 	// Retrieve initial position, initailize current and last
-	init_pos(&ri);
+	init_pos(&ri, robotID);
 	update_pos(&ri, direction);
 
 	cvNamedWindow("Square Display", CV_WINDOW_AUTOSIZE);

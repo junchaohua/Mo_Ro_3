@@ -13,14 +13,6 @@ typedef enum{
 	HEADING_LEFT
 } robot_heading;
 
-typedef enum{
-	MV_FWD, 
-	TN_LEFT_90, 
-	TN_RGHT_90, 
-	CENTER_TWO_PAIR, 
-	CENTER_ONE_PAIR
-} move_command;
-
 typedef struct _array_map_obj_t_{
 	int type;
 	int points;

@@ -46,7 +46,7 @@ void get_kalman_filter_data(vector *kf_data);
 float delta_theta(float current_theta, float previous_theta);
 
 //sets up initial coordinates
-void init_pos(robot_if_t *ri);		
+void init_pos(robot_if_t *ri, int robotID);		
 
 /* Get Position of bot, stored in vector loc, feed kalman filter expected velocities, reports a room change */
 int get_Position(robot_if_t *ri, vector *loc, vector *vel, int m_t);

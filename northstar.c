@@ -18,15 +18,6 @@ float theta_cor[] = {
 	 1.502438  /*ROOM FIVE THETA COR*/
 };
 
-/*
-float theta_cor[] = {
-	0.060368, //ROOM TWO THETA COR
-	1.556130, //ROOM THREE THETA COR
-	0.020485, //ROOM FOUR THETA COR
-	1.502438  //ROOM FIVE THETA COR
-}
-*/
-
 // Populate NorthStar Stance Object from sensor data
 void get_ns(ns_stance *s, robot_if_t *ri ) {
 	s->x = ri_getX(ri);
@@ -37,8 +28,9 @@ void get_ns(ns_stance *s, robot_if_t *ri ) {
 }
 
 float rot_theta;
+
 // Setup the transformation matrices with values stored in NS stance s
-void setup_NS_transforms(ns_stance *s) {
+void setup_NS_transforms(ns_stance *s, int robotID) {
 	rot_theta = theta_cor[(s->room - 2)];  // rotation theta is defined by theta correctection matrix, values defined during calibration
 	
 	// free pointers in case previously declared
@@ -55,9 +47,13 @@ void setup_NS_transforms(ns_stance *s) {
 	//print_ns(s);	
 	
 	// initialize shift vector
+	
 	ns_shift_vector->v[0] = (-1.0)*((float)s->x);
 	ns_shift_vector->v[1] = (-1.0)*((float)s->y);
-	ns_shift_vector->v[2] = (-1.0)*(s->theta);
+	
+	if(robotID == 1) ns_shift_vector->v[2] = s->theta;
+	else		 ns_shift_vector->v[2] = (-1.0)*(s->theta);
+	
 	//diagnostic
 	//printf("Shift Vector is ");
 	//PrintVector(ns_shift_vector);

@@ -30,7 +30,7 @@ typedef struct _ns_stance_ {
 void get_ns(ns_stance *s, robot_if_t *ri );
 
 // Setup the transformation matrices with values stored in NS stance s
-void setup_NS_transforms(ns_stance *s);
+void setup_NS_transforms(ns_stance *s, int robotID);
 
 // Perform northstar transformation 
 void transform_NS(ns_stance *s, vector *ns);

@@ -64,7 +64,7 @@ float get_we_X(we_stance *s) {
 	avg /= AVG_DIVISOR;
 	avg /= WE_TICKS_PER_CM;
 	
-	return avg;
+	return -avg;
 }
 
 // Currently Reports LEFT/RIGHT distance from TOTALS
@@ -78,7 +78,7 @@ float get_we_Y(we_stance *s) {
 	
 	avg /= (WE_TICKS_PER_CM * 4.0);
 	
-	return avg;
+	return -avg;
 }
 
 float get_we_Theta(we_stance *s) {

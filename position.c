@@ -30,6 +30,7 @@ filter *f[NUM_FILTERS];
 robot_stance *initial, *current, *previous, *last;
 vector *room_switch;
 kalmanFilter *kfilter;
+int rID;
 //int kalman_count = 0;
 
 // Update the robot's sensor information 
@@ -128,11 +129,13 @@ void get_kalman_filter_data(vector *kf_data){
 }
 
 // Initialize the positioning so transforms are set up properly 
-void init_pos(robot_if_t *ri){
+void init_pos(robot_if_t *ri, int robotID){
 	int i;
 	float vel[3] = {0, 0, 0};
 	float pos[3] = {0, 0, 0};
 	int deltaT = 1;
+	
+	rID = robotID;
 	
 	// Get initial Northstar position
 	update_sensor_data(ri);
@@ -157,7 +160,7 @@ void init_pos(robot_if_t *ri){
 	//print_ns(initial->ns_f);
 	
 	// Setup Northstar and Wheel Encoder Transform matrices based on intial position
-	setup_NS_transforms(initial->ns_f);
+	setup_NS_transforms(initial->ns_f, rID);
 	setup_WE_transforms(initial->weTranslated);  // weTranslated is set to zero during create_stance
 	
 	//printf("Initial Kalman Theta = %f \n", initial->kalmanFiltered->v[2]);
@@ -211,7 +214,7 @@ void room_change(robot_if_t *ri){
 	printf("current room : %d, %d, %f, %d\n", current->ns_f->x, current->ns_f->y, current->ns_f->theta, current->ns_f->sig);
 		
 	// update NS shift and rotate to new room characteristics
-	setup_NS_transforms(current->ns_f);
+	setup_NS_transforms(current->ns_f, rID);
 	
 	// store the vector produced by Northstar prior to room shift so that we can add onto it in the new room
 	room_switch->v[0] = previous->nsTranslated->v[0];

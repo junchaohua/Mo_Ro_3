@@ -41,7 +41,7 @@ int main(int argv, char **argc) {
 	getc(stdin);
 	printf("\n\n");
 	
-	init_pos(&ri);
+	init_pos(&ri, 2);
 
 	/* Get Room ID of first postion */
 	room_id_u = NS_theta_cal(&ri, u);
@@ -50,7 +50,7 @@ int main(int argv, char **argc) {
 	printf("Pleae move the robot forward APPROX 1 meter without changing its orientation.\nHit the any key to continue!");
 	getc(stdin);
 	printf("\n\n");
-	init_pos(&ri);
+	init_pos(&ri, 2);
 	
 	/* Get Room ID of final postion */
 	room_id_w = NS_theta_cal(&ri, w);
