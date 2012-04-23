@@ -11,7 +11,8 @@
 #include <stdio.h>
 #include "matvec.h"
 
-#define AVG_DIVISOR		1.05  // Change this to 1.0 if one of the wheel encoders isn't working
+ /*#define AVG_DIVISOR		2.0   // BENDER */
+#define AVG_DIVISOR		1.05  // OPTIMUS
 #define WE_TICKS_PER_CM		2.0
 #define ROTATION_SCALING	1.0
 

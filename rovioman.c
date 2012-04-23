@@ -785,7 +785,13 @@ int main(int argv, char **argc) {
 		exit(-1);
 	}
 
-	// Setup the camera  0x1A for bender
+	/*// BENDER
+	if(ri_cfg_camera(&ri, 0x1A, RI_CAMERA_DEFAULT_CONTRAST, 5, RI_CAMERA_RES_640, RI_CAMERA_QUALITY_HIGH)) {
+		printf("Failed to configure the camera!\n");
+		exit(-1);
+	}
+	*/
+	// OPTIMUS
 	if(ri_cfg_camera(&ri, RI_CAMERA_DEFAULT_BRIGHTNESS, RI_CAMERA_DEFAULT_CONTRAST, 5, RI_CAMERA_RES_640, RI_CAMERA_QUALITY_HIGH)) {
 		printf("Failed to configure the camera!\n");
 		exit(-1);
