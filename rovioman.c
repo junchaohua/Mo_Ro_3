@@ -94,7 +94,7 @@ int fwdSpeedScaling(float PIDout) {
 	return speed;
 }
 
-int rotSpeedScaling(float PIDout) {
+int rotSpeedScaling(float PIDout) {//since increases in speed are non-linear we use discrete values for our PID controller
 	float 	rotScale;
 	int	speed;
 	
@@ -116,7 +116,7 @@ int rotSpeedScaling(float PIDout) {
 	return speed;
 }
 
-float get_euclidian_distance(float start_x, float start_y, float end_x, float end_y){
+float get_euclidian_distance(float start_x, float start_y, float end_x, float end_y){//self explanatory
 	float	diff1,
 		diff2;
 	diff1 = end_x - start_x;
@@ -333,7 +333,7 @@ int pairsToExpect(robot_heading heading, robot_heading direction_to_move){
 	}
 }
 
-int isObstructed(int cell_type){
+int isObstructed(int cell_type){//checks to see if a cell can be moved into
 	if(robotID == 0){//0==2
 	      if((cell_type == MAP_OBJ_EMPTY)||
 		(cell_type == MAP_OBJ_RESERVE_2)||
@@ -352,9 +352,8 @@ int isObstructed(int cell_type){
 	  
 }
 
-//doesn't use backward right now
-void makeAMove(robot_if_t *ri){//fill in outline comments
-	robot_heading where_to_go = whereToGo(ri);
+void makeAMove(robot_if_t *ri){//move the robot to the best spot
+	robot_heading where_to_go = whereToGo(ri);//find the best spot to move the robot to
 	
 	printf("Current Facing = %d\tWhere to go = %d\n", facing, where_to_go);
 	//getc(stdin);
